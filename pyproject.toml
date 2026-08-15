@@ -7,7 +7,9 @@ authors = [
     { name = "zhengfeng", email = "zhengfeng.cai@thoughtworks.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "mem0ai>=2.0.18",
+]
 
 [project.scripts]
 some-agent-like-you = "some_agent_like_you:main"
