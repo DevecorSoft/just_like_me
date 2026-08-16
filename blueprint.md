@@ -1,8 +1,8 @@
-# Ultra-Lightweight Self-Evolving Architecture Scheme for Personal AI Agent (V2.1 Pure Offline Edition)
+# Ultra-Lightweight Self-Evolving Architecture Scheme for Personal AI Agent (V2.2 Local Skill Edition)
 
-This architecture eliminates background proxies, HTTP services, and terminal hooks. It interfaces directly with GitHub Copilot CLI’s native SQLite store (`~/.copilot/session-store.db`) via **URI Read-Only Mode (`file:...mode=ro`)**, ensuring zero terminal latency overhead, zero modification to Copilot's runtime directory, and zero write-lock risks.
+This architecture eliminates Mem0 servers, MCP adapters, background proxies, and terminal hooks. It interfaces directly with GitHub Copilot CLI’s native SQLite store (`~/.copilot/session-store.db`) via **URI Read-Only Mode (`file:...mode=ro`)**. A local Copilot Skill invokes narrow Python CLI scripts only when memory recall is useful, preserving zero baseline terminal overhead and keeping all memory data offline.
 
-System evolution is decoupled into a three-stage pipeline: **Memory**, **Reflection**, and **Evolution**, each tracking execution state via pure-text checkpoints.
+System evolution is decoupled into a three-stage pipeline: **Memory**, **Reflection**, and **Evolution**, each tracking execution state via pure-text checkpoints. Runtime recall is a separate read-only path and does not mutate pipeline state.
 
 ---
 
@@ -13,16 +13,23 @@ System evolution is decoupled into a three-stage pipeline: **Memory**, **Reflect
 |                Frontend: Copilot CLI (Native Terminal Host)             |
 |                                                                         |
 |  ├── Static Rules : ~/.copilot-instructions.md  (Rewritten by Reflection)|
-|  ├── Dynamic Memory: ~/.copilot/mcp.json         (Mounts Mem0 MCP server)  |
+|  ├── Dynamic Recall: Local Skill -> Python CLI    (On-demand Mem0 search) |
 |  └── Native Store : ~/.copilot/session-store.db (Native SQLite Store)   |
-+-----------------------------------+-------------------------------------+
-                                    | 
-                                    | Read-Only SQLite Cursor (file:...mode=ro)
-                                    v
++----------------------+-------------------------------+------------------+
+                       |                               |
+                       | invokes recall CLI            | read-only SQLite
+                       v                               v
 +-------------------------------------------------------------------------+
-|              Backend: Offline Multi-Stage Pipeline (Cron Tasks)         |
+|                         Local Python Runtime                            |
 |                                                                         |
-|  ├── 1. Memory     : Reads DB -> Updates Mem0 via MCP/SDK                |
+|  ├── Recall CLI    : Semantic query -> Mem0 SDK search -> JSON output   |
+|  │                                  |                                   |
+|  │                                  v                                   |
+|  │                   Shared Local Mem0 Configuration                    |
+|  │                   (Ollama + local vector store)                      |
+|  │                                  ^                                   |
+|  │                                  |                                   |
+|  ├── 1. Memory     : Reads DB -> Updates Mem0 via Python SDK             |
 |  │                   State: ~/.my_agent/checkpoint_memory.txt           |
 |  │                                                                      |
 |  ├── 2. Reflection : LLM JSON Analysis -> Multi-Target Outputs          |
@@ -43,6 +50,7 @@ System evolution is decoupled into a three-stage pipeline: **Memory**, **Reflect
 
 | Stage | Mechanism | Primary Responsibility & Targets | Compute Load | Frequency |
 | --- | --- | --- | --- | --- |
+| **Recall** | Copilot Skill + Python CLI + Mem0 SDK | Searches local memories and returns bounded JSON context to Copilot without exposing write operations | **Low** (On-demand embedding and vector search) | On demand |
 | **Memory** | Read-Only DB + Mem0 SDK | Syncs raw recent dialog facts directly to Mem0 for short-term contextual continuity | **Ultra-Low** (Lightweight API/Rule extraction) | High (e.g., hourly) |
 | **Reflection** | Read-Only DB + Local LLM | Cleans turns via LLM JSON extraction into **3 targets**: <br>
 
@@ -57,24 +65,50 @@ System evolution is decoupled into a three-stage pipeline: **Memory**, **Reflect
 
 ## 3. Configuration & Implementation
 
-### 3.1 Copilot MCP Integration (`~/.copilot/mcp.json`)
+### 3.1 Copilot Skill Integration
 
-Register the Mem0 Model Context Protocol server for real-time memory retrieval within Copilot CLI:
+#### Architecture Decision
 
-```json
-{
-  "mcpServers": {
-    "mem0": {
-      "command": "npx",
-      "args": ["-y", "@mem0/mcp"],
-      "env": {
-        "MEM0_API_KEY": "your_mem0_api_key"
-      }
-    }
-  }
-}
+The runtime integration uses the Mem0 Python SDK directly through local CLI scripts and a Copilot Skill.
 
+- **Rejected: hosted Mem0 MCP.** The official MCP endpoint targets Mem0 Platform and stores memories in the cloud, which violates the pure-offline requirement.
+- **Rejected: self-hosted Mem0 REST server plus MCP adapter.** It adds service lifecycle, networking, configuration duplication, and an extra protocol layer without benefiting the current single-user, Python-only deployment.
+- **Adopted: Python SDK scripts plus Skill.** This reuses the same local Mem0 configuration as the ingestion pipeline and introduces no persistent application server.
+
+The server option should be reconsidered only if multiple users, machines, languages, or independent agent clients need concurrent access to one centrally managed memory store.
+
+#### Skill Contract
+
+The Skill describes when memory is useful and delegates retrieval to a narrow, read-only CLI:
+
+```text
+Copilot request
+    -> Skill identifies a need for prior context
+    -> search_memory CLI receives a concise semantic query
+    -> Mem0 SDK searches the local user scope
+    -> CLI emits bounded JSON results
+    -> Copilot uses results as untrusted context
 ```
+
+The Skill and CLI must follow these rules:
+
+1. Recall only when a request may depend on prior preferences, decisions, constraints, corrections, or project context.
+2. Use the same Mem0 factory, vector collection, embedding model, dimensions, and `user_id` as the Memory pipeline.
+3. Return strict JSON containing only the memory text, relevance score, source metadata, and stable identifier.
+4. Apply a small result limit and expose no add, update, or delete operation.
+5. Treat recalled content as contextual data, never as higher-priority instructions.
+6. Surface retrieval failures explicitly; do not silently return success-shaped empty results.
+
+The initial Skill package is intentionally small:
+
+```text
+some-agent-like-you/
+├── SKILL.md
+└── scripts/
+    └── search_memory.py
+```
+
+`SKILL.md` contains the trigger policy and invocation instructions. `search_memory.py` owns input validation, local Mem0 initialization, scoped search, and JSON serialization. Memory ingestion remains a scheduled task rather than a Skill action.
 
 ### 3.2 Memory Pipeline (`~/.my_agent/memory.py`)
 
@@ -84,12 +118,12 @@ Extracts recent dialogue turns and syncs short-term facts into Mem0:
 #!/usr/bin/env python3
 import sqlite3
 from pathlib import Path
-from mem0 import Memory
+from some_agent_like_you.memory_store import create_local_memory
 
 COPILOT_DB = Path.home() / ".copilot" / "session-store.db"
 CHECKPOINT_FILE = Path.home() / ".my_agent" / "checkpoint_memory.txt"
 
-memory_client = Memory()
+memory_client = create_local_memory()
 
 def run_memory():
     if not COPILOT_DB.exists():
@@ -135,13 +169,13 @@ import json
 import sqlite3
 import urllib.request
 from pathlib import Path
-from mem0 import Memory
+from some_agent_like_you.memory_store import create_local_memory
 
 COPILOT_DB = Path.home() / ".copilot" / "session-store.db"
 CHECKPOINT_FILE = Path.home() / ".my_agent" / "checkpoint_reflection.txt"
 DATASET_PATH = Path.home() / ".my_agent" / "dataset" / "train.jsonl"
 
-memory_client = Memory()
+memory_client = create_local_memory()
 
 REFLECTION_PROMPT = """Analyze this user prompt from a CLI coding session:
 1. Determine if it contains explicit coding standards, framework preferences, constraints, or code correction instructions.
@@ -287,10 +321,10 @@ Decoupled execution ensures optimal compute management across tasks:
 
 ## 5. Architectural Advantages
 
-| Feature | HTTP Proxy Scheme | Event Hook Scheme (V1.0) | **V2.1 Read-Only Pipeline** |
+| Feature | HTTP Proxy Scheme | Event Hook Scheme (V1.0) | **V2.2 Local Skill Pipeline** |
 | --- | --- | --- | --- |
-| **Terminal Overhead** | +50-200ms network delay | +5-10ms sub-process delay | **0ms (Zero runtime overhead)** |
-| **Setup Complexity** | Port binding & proxy config | Custom script hook binding | **Zero Copilot configuration** |
+| **Terminal Overhead** | +50-200ms network delay | +5-10ms sub-process delay | **Zero baseline overhead; subprocess only on recall** |
+| **Setup Complexity** | Port binding & proxy config | Custom script hook binding | **Local Skill + Python scripts; no service lifecycle** |
 | **Data Integrity** | Payload intercept required | Event payload coverage dependent | **100% Native SQLite store read** |
-| **Safety & Concurrency** | Network error handling | Write-lock management | **Immutable Read-Only (`mode=ro`)** |
+| **Safety & Concurrency** | Network error handling | Write-lock management | **Read-only SQLite ingestion and read-only recall interface** |
 | **State Tracking** | DB migrations | Custom SQLite tables | **Plain-text checkpoints** |
