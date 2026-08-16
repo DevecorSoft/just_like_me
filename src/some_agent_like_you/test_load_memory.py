@@ -24,10 +24,17 @@ class Test(TestCase):
     )
 
     generator = context_aware_conversation_generator(turns)
+
     self.assertEqual(
-      ("5b792c28-0d4b-44db-b233-7da60d4a65d0", "<user>user message 2</user>\n<assistant>assistant message 2</assistant>"),
+      ("5b792c28-0d4b-44db-b233-7da60d4a65d0", [
+        {"role": "user", "content": "user message 2"},
+        {"role": "assistant", "content": "assistant message 2"}
+      ]),
       next(generator))
     self.assertEqual(
-      ("e6827af0-c7b1-4544-a680-a645c67bf629", "<user>user message 1</user>\n<assistant>assistant message 1</assistant>\n"
-      "<user>user message 1.1</user>\n<assistant>assistant message 1.1</assistant>"),
+      ("e6827af0-c7b1-4544-a680-a645c67bf629",
+       [{"role": "user", "content": "user message 1"},
+        {"role": "assistant", "content": "assistant message 1"},
+        {"role": "user", "content": "user message 1.1"},
+        {"role": "assistant", "content": "assistant message 1.1"}]),
       next(generator))

@@ -8,7 +8,9 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
-    "mem0ai>=2.0.18",
+    "mem0ai[extras,nlp]>=2.0.18",
+    "ollama>=0.5.3",
+    "sentence-transformers>=5.7.0",
 ]
 
 [project.scripts]
