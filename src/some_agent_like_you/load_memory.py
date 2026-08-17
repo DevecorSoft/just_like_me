@@ -7,33 +7,10 @@ from itertools import groupby
 from mem0 import Memory
 
 from some_agent_like_you import memory_checkpoint
+from some_agent_like_you.memory_config import config
 from some_agent_like_you.session_store_query import connect
 
 logger = logging.getLogger(__name__)
-
-def create_local_memory() -> Memory:
-  config = {
-    "vector_store": {
-      "provider": "qdrant",
-      "config": {"host": "localhost", "port": 6333,
-                 "embedding_model_dims": 2560,
-                 "collection_name": "some_agent_like_you", },
-    },
-    "llm": {
-      "provider": "ollama",
-      "config": {
-        "model": "qwen2.5:14b",
-        "temperature": 0.1,
-        "max_tokens": 2048,
-      },
-    },
-    "embedder": {
-      "provider": "ollama",
-      "config": {"model": "qwen3-embedding:4b", "embedding_dims": 2560},
-    },
-  }
-  return Memory.from_config(config)
-
 
 def context_aware_conversation_generator(turns, max_turns_per_chunk=10):
   valid_turns = filter(
@@ -76,7 +53,7 @@ def run_memory_pipeline(max_turns_per_chunk: int):
 
   initialization_started_at = time.perf_counter()
   logger.info("Initializing local Mem0 client")
-  memory_client = create_local_memory()
+  memory_client = Memory.from_config(config)
   logger.info(
     "Initialized local Mem0 client in %.1fs",
     time.perf_counter() - initialization_started_at

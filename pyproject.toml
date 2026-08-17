@@ -15,6 +15,8 @@ dependencies = [
 
 [project.scripts]
 some-agent-like-you = "some_agent_like_you:main"
+memory_daemon = "some_agent_like_you.memory_daemon:main"
+recall-memory = "some_agent_like_you.recall_memory:main"
 
 [build-system]
 requires = ["uv_build>=0.12.3,<0.13.0"]
