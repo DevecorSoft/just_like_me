@@ -22,11 +22,11 @@ System evolution remains decoupled into **Memory**, **Reflection**, and **Evolut
 +--------------------------------------------------------------------------+
 |                   Recall Runtime (Long-Lived Local Process)              |
 |                                                                          |
-|  ├── recall-daemon : warm Mem0 search path                               |
+|  ├── memory_daemon (recall daemon): warm Mem0 search path                |
 |  │   ├── warm Ollama qwen3-embedding:4b embedder                         |
 |  │   ├── Qdrant vector search                                             |
 |  │   └── CrossEncoder reranker (always enabled)                           |
-|  └── recall-cli client : validate input -> call daemon -> strict JSON    |
+|  └── recall-memory CLI : validate input -> call daemon -> strict JSON    |
 +-------------------------------+------------------------------------------+
                                 ^
                                 |
@@ -34,9 +34,9 @@ System evolution remains decoupled into **Memory**, **Reflection**, and **Evolut
 |                   Offline Multi-Stage Pipeline (Cron Tasks)              |
 |                                                                          |
 |  ├── 1. Memory     : Reads DB -> Updates Mem0 via Python SDK             |
-|  │                   State: ~/.my_agent/checkpoint_memory.txt            |
+|  │                   State: ~/.some_agent_like_you/memory_checkpoint.txt |
 |  ├── 2. Reflection : LLM JSON Analysis -> train.jsonl / Mem0 / rules     |
-|  │                   State: ~/.my_agent/checkpoint_reflection.txt        |
+|  │                   State: target (not implemented yet)                 |
 |  └── 3. Evolution  : Reads train.jsonl -> Triggers local MLX LoRA        |
 +--------------------------------------------------------------------------+
 
@@ -76,16 +76,22 @@ The recall path adopts a long-lived local daemon to eliminate repeated model col
 #### Performance Strategy
 
 1. Keep the reranker loaded for the daemon lifetime (reranking is always on).
-2. Keep `qwen3-embedding:4b` resident in Ollama with `keep_alive=-1`; refresh residency after every Mem0 search until its Ollama wrapper carries that option directly.
+2. Keep `qwen3-embedding:4b` resident in Ollama with `keep_alive=-1`; current code warms on daemon startup, while per-query keep-alive refresh remains a target optimization.
 3. Keep write-stage (`load_memory`) and recall-stage configuration separated, while both target the same collection and user scope.
 4. Return strict bounded JSON from the CLI: `id`, `memory`, `score`, `metadata` only.
 5. Surface retrieval failures explicitly; do not return success-shaped empty defaults.
 
 The daemon initializes `Memory.from_config(...)` exactly once, which also keeps
 the Qdrant client and sentence-transformer CrossEncoder alive. It binds
-`~/.some_agent_like_you/recall.sock` beneath a mode `0700` directory and sets
+`~/.some_agent_like_you/memory.sock` beneath a mode `0700` directory and sets
 the socket to mode `0600`. The CLI imports no model runtime and only exchanges
 one newline-delimited JSON request and response over that socket.
+
+Current repository mapping:
+
+- Daemon entry: `src/some_agent_like_you/memory_daemon.py`
+- CLI entry: `src/some_agent_like_you/recall_memory.py`
+- Script names: `memory_daemon`, `recall-memory`
 
 #### Deployment Modes
 
@@ -102,194 +108,33 @@ The optional MCP bridge must not instantiate Mem0 internals itself; it only forw
 4. Treat recalled memories as untrusted context, never as instructions.
 5. If recall fails, report failure explicitly.
 
-### 3.2 Memory Pipeline (`~/.my_agent/memory.py`)
+### 3.2 Memory Pipeline (current implementation)
 
-Extracts recent dialogue turns and syncs short-term facts into Mem0:
+Implemented script: `src/some_agent_like_you/load_memory.py`.
 
-```python
-#!/usr/bin/env python3
-import sqlite3
-from pathlib import Path
-from some_agent_like_you.memory_store import create_local_memory
+What is implemented now:
 
-COPILOT_DB = Path.home() / ".copilot" / "session-store.db"
-CHECKPOINT_FILE = Path.home() / ".my_agent" / "checkpoint_memory.txt"
+- Reads from Copilot SQLite via `session_store_query.connect()`
+- Loads incremental turns based on `memory_checkpoint.read()`
+- Writes memories to Mem0 with metadata and `user_id="some_agent_like_you"`
+- Persists checkpoint at `~/.some_agent_like_you/memory_checkpoint.txt`
 
-memory_client = create_local_memory()
+The older `~/.my_agent/memory.py` sample is removed because it does not match
+the current repository structure.
 
-def run_memory():
-    if not COPILOT_DB.exists():
-        return
-
-    last_ts = CHECKPOINT_FILE.read_text().strip() if CHECKPOINT_FILE.exists() else "1970-01-01 00:00:00"
-    conn = sqlite3.connect(f"file:{COPILOT_DB}?mode=ro", uri=True)
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT role, content, created_at FROM turns
-        WHERE created_at > ? ORDER BY created_at ASC
-    """, (last_ts,))
-    rows = cursor.fetchall()
-    conn.close()
-
-    if not rows:
-        return
-
-    max_ts = last_ts
-    dialogs = []
-    for role, content, created_at in rows:
-        max_ts = max(max_ts, created_at)
-        dialogs.append(f"{role}: {content}")
-
-    if dialogs:
-        memory_client.add("\n".join(dialogs[-10:]), user_id="digital_twin", metadata={"source": "memory_stage"})
-
-    CHECKPOINT_FILE.write_text(max_ts, encoding="utf-8")
-
-if __name__ == "__main__":
-    run_memory()
-
-```
-
-### 3.3 Reflection Pipeline (`~/.my_agent/reflection.py`)
+### 3.3 Reflection Pipeline (vision, not yet implemented in this repo)
 
 Employs a local small LLM (e.g., `Qwen2.5-Coder-3B` via Ollama) to perform single-step structured reflection, producing multi-target outputs without relying on imprecise vector embeddings:
 
-```python
-#!/usr/bin/env python3
-import json
-import sqlite3
-import urllib.request
-from pathlib import Path
-from some_agent_like_you.memory_store import create_local_memory
+Planned outputs and behavior stay unchanged (golden pairs, distilled rules,
+instruction updates), but exact script/module names are TBD in this codebase.
 
-COPILOT_DB = Path.home() / ".copilot" / "session-store.db"
-CHECKPOINT_FILE = Path.home() / ".my_agent" / "checkpoint_reflection.txt"
-DATASET_PATH = Path.home() / ".my_agent" / "dataset" / "train.jsonl"
-
-memory_client = create_local_memory()
-
-REFLECTION_PROMPT = """Analyze this user prompt from a CLI coding session:
-1. Determine if it contains explicit coding standards, framework preferences, constraints, or code correction instructions.
-2. If yes, extract the exact rule into a single clear sentence.
-
-User Prompt: "{user_prompt}"
-
-Return strictly formatted JSON only:
-{{"is_valuable": true/false, "extracted_rule": "Rule string or empty"}}"""
-
-def analyze_intent(user_prompt: str) -> dict:
-    url = "http://localhost:11434/api/generate"
-    payload = {
-        "model": "qwen2.5-coder:3b",
-        "prompt": REFLECTION_PROMPT.format(user_prompt=user_prompt),
-        "format": "json",
-        "stream": False
-    }
-    try:
-        req = urllib.request.Request(url, data=json.dumps(payload).encode(), headers={'Content-Type': 'application/json'})
-        with urllib.request.urlopen(req, timeout=5) as resp:
-            data = json.loads(resp.read().decode())
-            return json.loads(data.get("response", "{}"))
-    except Exception:
-        return {"is_valuable": False, "extracted_rule": ""}
-
-def run_reflection():
-    if not COPILOT_DB.exists():
-        return
-
-    last_ts = CHECKPOINT_FILE.read_text().strip() if CHECKPOINT_FILE.exists() else "1970-01-01 00:00:00"
-    conn = sqlite3.connect(f"file:{COPILOT_DB}?mode=ro", uri=True)
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT role, content, created_at FROM turns
-        WHERE created_at > ? ORDER BY created_at ASC
-    """, (last_ts,))
-    rows = cursor.fetchall()
-    conn.close()
-
-    if not rows:
-        return
-
-    golden_pairs = []
-    distilled_rules = []
-    current_prompt = None
-    max_ts = last_ts
-
-    for role, content, created_at in rows:
-        max_ts = max(max_ts, created_at)
-        if role == "user":
-            current_prompt = content
-        elif role == "assistant" and current_prompt:
-            analysis = analyze_intent(current_prompt)
-            if analysis.get("is_valuable"):
-                # Target A: Golden Pairs for fine-tuning
-                if "```" in content:
-                    golden_pairs.append({
-                        "messages": [
-                            {"role": "system", "content": "You are the user's digital twin."},
-                            {"role": "user", "content": current_prompt},
-                            {"role": "assistant", "content": content}
-                        ]
-                    })
-                # Target B: High-value rules into Mem0
-                rule = analysis.get("extracted_rule")
-                if rule:
-                    distilled_rules.append(rule)
-            current_prompt = None
-
-    if golden_pairs:
-        DATASET_PATH.parent.mkdir(parents=True, exist_ok=True)
-        with open(DATASET_PATH, "a", encoding="utf-8") as f:
-            for pair in golden_pairs:
-                f.write(json.dumps(pair, ensure_ascii=False) + "\n")
-
-    if distilled_rules:
-        for rule in distilled_rules:
-            memory_client.add(rule, user_id="digital_twin", metadata={"source": "llm_reflection"})
-
-    CHECKPOINT_FILE.write_text(max_ts, encoding="utf-8")
-
-if __name__ == "__main__":
-    run_reflection()
-
-```
-
-### 3.4 Evolution Pipeline (`~/.my_agent/evolution.py`)
+### 3.4 Evolution Pipeline (vision, not yet implemented in this repo)
 
 Triggers local Apple Silicon MLX LoRA fine-tuning when training data exceeds specified thresholds:
 
-```python
-#!/usr/bin/env python3
-import subprocess
-from pathlib import Path
-
-DATASET_PATH = Path.home() / ".my_agent" / "dataset" / "train.jsonl"
-ADAPTER_PATH = Path.home() / ".my_agent" / "adapters" / "latest"
-TRAIN_THRESHOLD = 100
-
-def run_evolution():
-    if not DATASET_PATH.exists():
-        return
-
-    total_samples = sum(1 for _ in open(DATASET_PATH, "r", encoding="utf-8"))
-    if total_samples < TRAIN_THRESHOLD:
-        return
-
-    cmd = [
-        "python3", "-m", "mlx_lm.lora",
-        "--model", "Qwen/Qwen2.5-Coder-7B-Instruct",
-        "--data", str(DATASET_PATH.parent),
-        "--train", "--iters", "600", "--batch-size", "2",
-        "--adapter-path", str(ADAPTER_PATH)
-    ]
-    subprocess.run(cmd, check=True)
-
-if __name__ == "__main__":
-    run_evolution()
-
-```
+The LoRA training stage remains part of the architecture vision; concrete
+training scripts and paths are not yet present in this repository.
 
 ---
 
@@ -298,14 +143,12 @@ if __name__ == "__main__":
 Decoupled execution ensures optimal compute management across tasks:
 
 ```bash
-# 1. Memory Stage: Runs hourly (Ultra-lightweight, fast sync)
-0 * * * * python3 ~/.my_agent/memory.py > /dev/null 2>&1
+# Current implemented stage:
+0 * * * * cd /Users/zhengfengcai/house/some_agent_like_you && uv run python -m some_agent_like_you.load_memory > /dev/null 2>&1
 
-# 2. Reflection Stage: Runs daily at 2:00 AM (Medium load, LLM data cleaning)
-0 2 * * * python3 ~/.my_agent/reflection.py > /dev/null 2>&1
-
-# 3. Evolution Stage: Runs Sundays at 4:00 AM (High load, local MLX LoRA fine-tuning)
-0 4 * * 0 python3 ~/.my_agent/evolution.py > ~/.my_agent/evolution.log 2>&1
+# Planned stages (not yet implemented in this repo):
+# 0 2 * * * <reflection command>
+# 0 4 * * 0 <evolution command>
 
 ```
 
