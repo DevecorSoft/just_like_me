@@ -1,6 +1,6 @@
 [project]
 name = "some-agent-like-you"
-version = "0.1.0"
+version = "0.1.1"
 description = "Add your description here"
 readme = "README.md"
 authors = [
@@ -14,8 +14,8 @@ dependencies = [
 ]
 
 [project.scripts]
-some-agent-like-you = "some_agent_like_you:main"
 memory_daemon = "some_agent_like_you.memory_daemon:main"
+load_memory = "some_agent_like_you.load_memory:main"
 recall-memory = "some_agent_like_you.recall_memory:main"
 install-recall-memory-skill = "some_agent_like_you.install_skill:main"
 

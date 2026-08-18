@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import argparse
 import logging
 import time
 from datetime import datetime, timezone
@@ -31,7 +32,7 @@ def context_aware_conversation_generator(turns, max_turns_per_chunk=10):
       yield session_id, [k for j in chunk for k in j]
 
 
-def run_memory_pipeline(max_turns_per_chunk: int):
+def run_memory_pipeline(max_turns_per_chunk: int = 10):
   last_timestamp = memory_checkpoint.read()
   conn = connect()
   cursor = conn.cursor()
@@ -96,9 +97,22 @@ def run_memory_pipeline(max_turns_per_chunk: int):
   )
 
 
-if __name__ == "__main__":
+def main() -> None:
+  parser = argparse.ArgumentParser(description="Load conversation history into memory store")
+  parser.add_argument(
+    "--max-turns-per-chunk",
+    type=int,
+    default=10,
+    help="Maximum number of turns to process in one memory batch (default: 10)",
+  )
+  args = parser.parse_args()
+
   logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s: %(message)s"
   )
-  run_memory_pipeline(max_turns_per_chunk=10)
+  run_memory_pipeline(max_turns_per_chunk=args.max_turns_per_chunk)
+
+
+if __name__ == "__main__":
+  main()

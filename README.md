@@ -37,5 +37,7 @@ Socket path: `~/.some_agent_like_you/memory.sock`.
 ## Ingestion
 
 ```shell
+uv run load_memory
 uv run python -m some_agent_like_you.load_memory
+uv run load_memory --max-turns-per-chunk 8
 ```
