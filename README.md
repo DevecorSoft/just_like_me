@@ -41,3 +41,21 @@ uv run load_memory
 uv run python -m some_agent_like_you.load_memory
 uv run load_memory --max-turns-per-chunk 8
 ```
+
+## hindsight
+
+```shell
+docker run -it --pull always --name hindsight --restart unless-stopped -p 8888:8888 -p 9999:9999 \
+  -e HINDSIGHT_API_LLM_PROVIDER=ollama \
+  -e HINDSIGHT_API_LLM_MODEL=qwen2.5:14b \
+  -v hindsight-data:$HOME/hindsight/.pg0 \
+  ghcr.io/vectorize-io/hindsight:0.9.1
+
+uv tool install hindsight-api
+
+export HINDSIGHT_API_LLM_PROVIDER=ollama
+export HINDSIGHT_API_LLM_MODEL=qwen2.5:14b
+hindsight-api
+
+npx @vectorize-io/hindsight-coding-agents install copilot-cli --server self-hosted --api-url http://localhost:8888
+```
