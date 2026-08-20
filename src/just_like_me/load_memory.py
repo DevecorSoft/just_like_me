@@ -8,9 +8,9 @@ from itertools import groupby
 
 from hindsight_client import Hindsight
 
-from some_agent_like_you import memory_checkpoint
-from some_agent_like_you.memory_config import hindsight_config
-from some_agent_like_you.session_store_query import connect
+from just_like_me import memory_checkpoint
+from just_like_me.memory_config import hindsight_config
+from just_like_me.session_store_query import connect
 
 logger = logging.getLogger(__name__)
 

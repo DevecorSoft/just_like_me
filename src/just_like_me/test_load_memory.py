@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from some_agent_like_you.load_memory import context_aware_conversation_generator
+from just_like_me.load_memory import context_aware_conversation_generator
 
 
 class Test(TestCase):

@@ -119,10 +119,10 @@ The behavior control plane stays off the interactive hot path.
 Current repository entry points:
 
 ```text
-src/some_agent_like_you/load_memory.py
-src/some_agent_like_you/memory_daemon.py
-src/some_agent_like_you/recall_memory.py
-src/some_agent_like_you/install_skill.py
+src/just_like_me/load_memory.py
+src/just_like_me/memory_daemon.py
+src/just_like_me/recall_memory.py
+src/just_like_me/install_skill.py
 ```
 
 The Mem0/Qdrant implementation is a working prototype and the baseline for the
@@ -398,7 +398,7 @@ Only after cognition cutover:
 The control plane may use a small local SQLite store such as:
 
 ```text
-~/.some_agent_like_you/control_plane.db
+~/.just_like_me/control_plane.db
 ```
 
 It stores proposals and governance state, not copies of Hindsight's generic

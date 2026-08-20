@@ -3,9 +3,9 @@ import os
 from pathlib import Path
 from unittest import TestCase
 
-from some_agent_like_you.memory_checkpoint import read, check_in
+from just_like_me.memory_checkpoint import read, check_in
 
-checkpoint = Path.home() / ".some_agent_like_you"
+checkpoint = Path.home() / ".just_like_me"
 memory_checkpoint_txt_ = checkpoint / "memory_checkpoint.txt"
 
 class Test(TestCase):
