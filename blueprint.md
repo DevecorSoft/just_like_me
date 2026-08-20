@@ -1,11 +1,11 @@
-# Agent Steward (V5.0)
+# Just Like Me (V5.0)
 
 > **Make Agents More Like You.**
 
 **Technical positioning:** A local behavior-evolution control plane for coding
 agents, powered by Hindsight.
 
-Agent Steward is not a general memory engine, a reflection engine, or an agent
+Just Like Me is not a general memory engine, a reflection engine, or an agent
 runtime. It is a local control plane that decides whether evidence-grounded
 knowledge is allowed to change a coding agent's future behavior.
 
@@ -85,7 +85,7 @@ The central rule is:
                                     | reflect citations, session outcomes
                                     v
 +--------------------------------------------------------------------------+
-|                    Agent Steward Behavior Control Plane                   |
+|                    Just Like Me Behavior Control Plane                    |
 |                                                                          |
 |  BehaviorChangeProposal                                                  |
 |    -> generate personal eval                                             |
@@ -132,7 +132,7 @@ Hindsight cutover.
 
 The repository and Python package retain the legacy `some-agent-like-you` /
 `some_agent_like_you` identifiers until the Hindsight migration provides a safe
-boundary for the naming change.
+boundary for the naming change (target: `just-like-me` / `just_like_me`).
 
 ---
 
@@ -187,7 +187,7 @@ Need to remember or synthesize knowledge?
   -> Hindsight
 
 Need to decide whether knowledge may change future behavior?
-  -> Agent Steward
+  -> Just Like Me
 
 Need to perform the current task?
   -> coding agent

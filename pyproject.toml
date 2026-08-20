@@ -8,6 +8,7 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
+    "hindsight-client>=0.9.1",
     "mem0ai[extras,nlp]>=2.0.18",
     "ollama>=0.5.3",
     "sentence-transformers>=5.7.0",
