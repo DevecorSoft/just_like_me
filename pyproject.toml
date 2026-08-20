@@ -1,6 +1,6 @@
 [project]
 name = "some-agent-like-you"
-version = "0.1.1"
+version = "0.2.0"
 description = "Add your description here"
 readme = "README.md"
 authors = [
@@ -9,16 +9,10 @@ authors = [
 requires-python = ">=3.12"
 dependencies = [
     "hindsight-client>=0.9.1",
-    "mem0ai[extras,nlp]>=2.0.18",
-    "ollama>=0.5.3",
-    "sentence-transformers>=5.7.0",
 ]
 
 [project.scripts]
-memory_daemon = "some_agent_like_you.memory_daemon:main"
 load_memory = "some_agent_like_you.load_memory:main"
-recall-memory = "some_agent_like_you.recall_memory:main"
-install-recall-memory-skill = "some_agent_like_you.install_skill:main"
 
 [build-system]
 requires = ["uv_build>=0.12.3,<0.13.0"]
