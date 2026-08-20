@@ -54,7 +54,7 @@ docker run -it --pull always --name hindsight --restart unless-stopped -p 8888:8
 uv tool install hindsight-api
 
 export HINDSIGHT_API_LLM_PROVIDER=ollama
-export HINDSIGHT_API_LLM_MODEL=Muse-Glimmer-30B-DFlash2:BF16
+export HINDSIGHT_API_LLM_MODEL=muse-glimmer:30b-mlx
 export HINDSIGHT_API_LLM_TIMEOUT=600
 export HINDSIGHT_API_LLM_SEND_BANK_AS_USER=true
 export HINDSIGHT_API_LLM_MAX_CONCURRENT=1
