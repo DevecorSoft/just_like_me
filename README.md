@@ -1,48 +1,19 @@
 # just-like-me
 
-Local memory recall with Mem0 + Ollama + Qdrant.
+A local behavior-evolution control plane for GitHub Copilot CLI, powered by Hindsight.
 
-## Install (CLI + skill)
+Hindsight owns cognition (retain → recall → observations → reflect). This project owns behavioral governance (propose → eval → approve → publish → monitor → rollback).
 
-```shell
-uv tool install just-like-me && install-recall-memory-skill
-```
-
-This installs `memory_daemon`, `recall-memory`, and copies the packaged skill to:
-`~/.agents/skills/recall-memory/SKILL.md`.
-
-## Start runtime
+## Install
 
 ```shell
-ollama serve
-
-docker run --name just-like-me-qdrant \
-  -p 6333:6333 -p 6334:6334 \
-  -v "$HOME/.just_like_me/qdrant:/qdrant/storage" \
-  qdrant/qdrant
-
-ollama pull qwen3-embedding:4b
-
-memory_daemon
+uv tool install just-like-me
+just_like_me.skills.install
 ```
 
-## Recall
+Copies the packaged skill to `~/.agents/skills/recall-memory/SKILL.md`.
 
-```shell
-recall-memory --limit 5 "preferred testing conventions"
-```
-
-Socket path: `~/.just_like_me/memory.sock`.
-
-## Ingestion
-
-```shell
-uv run load_memory
-uv run python -m just_like_me.load_memory
-uv run load_memory --max-turns-per-chunk 8
-```
-
-## hindsight
+## Start Hindsight
 
 ```shell
 uv tool install hindsight-api
@@ -56,6 +27,40 @@ export HINDSIGHT_API_LLM_MAX_CONCURRENT=1
 export HINDSIGHT_API_RETAIN_MAX_CONCURRENT=1
 export HF_HUB_OFFLINE=1
 hindsight-api
+```
 
+Or install as a macOS daemon (runs on login, auto-restarts):
+
+```shell
+just_like_me.daemon.install
+```
+
+## Copilot integration
+
+```shell
 npx @vectorize-io/hindsight-coding-agents install copilot-cli --server self-hosted --api-url http://localhost:8888
 ```
+
+## Ingestion
+
+Ingest Copilot conversation history into the `just_like_me` memory bank:
+
+```shell
+just_like_me.load_memory
+just_like_me.load_memory --max-turns-per-chunk 10
+```
+
+Reads from the read-only Copilot SQLite session store, checkpoints progress, and retains conversations via the Hindsight client at `http://localhost:8888`.
+
+## Recall
+
+```shell
+hindsight memory recall just_like_me "<semantic query>" --fact-type world,observation --budget mid
+```
+
+## References
+
+- [Hindsight](https://github.com/vectorize-io/hindsight)
+- [Hindsight Recall API](https://hindsight.vectorize.io/developer/api/recall)
+- [Hindsight Copilot integration](https://hindsight.vectorize.io/blog/2026/07/30/github-copilot-persistent-memory)
+
