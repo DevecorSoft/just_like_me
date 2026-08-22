@@ -9,7 +9,6 @@ from itertools import groupby
 from hindsight_client import Hindsight
 
 from just_like_me import memory_checkpoint
-from just_like_me.memory_config import hindsight_config
 from just_like_me.session_store_query import connect
 
 logger = logging.getLogger(__name__)
