@@ -108,7 +108,7 @@ The behavior control plane stays off the interactive hot path.
 | --- | --- | --- |
 | Copilot conversation ingestion | Implemented prototype | Read-only Copilot SQLite |
 | Local memory extraction and storage | Implemented prototype | Mem0 + Ollama + Qdrant |
-| Low-latency recall | Implemented prototype | Warm daemon + reranker + Unix socket CLI |
+| Low-latency recall | Implemented prototype | Warm just_like_me.daemon + reranker + Unix socket CLI |
 | Hindsight shadow evaluation | Planned next | Self-hosted Hindsight + Copilot integration |
 | Hindsight cognition plane | Target, not adopted yet | Retain / Recall / Reflect / Observations |
 | BehaviorChangeProposal registry | Not implemented | Local control-plane SQLite |
@@ -375,7 +375,7 @@ If the PoC passes:
 3. re-ingest from authoritative Copilot transcripts and relevant git history;
 4. switch Recall/Reflect consumers to Hindsight;
 5. retain the Mem0 path temporarily only as a rollback option;
-6. remove Mem0, Qdrant, the custom warm daemon, and duplicate ingestion after
+6. remove Mem0, Qdrant, the custom warm just_like_me.daemon, and duplicate ingestion after
    the rollback window closes.
 
 There is no planned long-term dual-write architecture.

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.justlikeme.hindsight-api</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-lc</string>
+        <string>hindsight-api</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>HINDSIGHT_API_LLM_PROVIDER</key>
+        <string>ollama</string>
+        <key>HINDSIGHT_API_LLM_MODEL</key>
+        <string>muse-glimmer:30b-mlx</string>
+        <key>HINDSIGHT_API_LLM_TIMEOUT</key>
+        <string>1200</string>
+        <key>HINDSIGHT_API_REFLECT_WALL_TIMEOUT</key>
+        <string>1200</string>
+        <key>HINDSIGHT_API_LLM_SEND_BANK_AS_USER</key>
+        <string>true</string>
+        <key>HINDSIGHT_API_LLM_MAX_CONCURRENT</key>
+        <string>1</string>
+        <key>HINDSIGHT_API_RETAIN_MAX_CONCURRENT</key>
+        <string>1</string>
+        <key>HF_HUB_OFFLINE</key>
+        <string>1</string>
+    </dict>
+    <key>WorkingDirectory</key>
+    <string>/Users/zhengfengcai/house/just_like_me</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/tmp/com.justlikeme.hindsight-api.out</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/com.justlikeme.hindsight-api.err</string>
+</dict>
+</plist>
