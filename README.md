@@ -45,23 +45,15 @@ uv run load_memory --max-turns-per-chunk 8
 ## hindsight
 
 ```shell
-docker run -it --pull always --name hindsight --restart unless-stopped -p 8888:8888 -p 9999:9999 \
-  -e HINDSIGHT_API_LLM_PROVIDER=ollama \
-  -e HINDSIGHT_API_LLM_MODEL=qwen2.5:14b \
-  -v hindsight-data:$HOME/hindsight/.pg0 \
-  ghcr.io/vectorize-io/hindsight:0.9.1
-
 uv tool install hindsight-api
 
 export HINDSIGHT_API_LLM_PROVIDER=ollama
 export HINDSIGHT_API_LLM_MODEL=muse-glimmer:30b-mlx
-export HINDSIGHT_API_LLM_TIMEOUT=600
+export HINDSIGHT_API_LLM_TIMEOUT=1200
+export HINDSIGHT_API_REFLECT_WALL_TIMEOUT=1200
 export HINDSIGHT_API_LLM_SEND_BANK_AS_USER=true
 export HINDSIGHT_API_LLM_MAX_CONCURRENT=1
 export HINDSIGHT_API_RETAIN_MAX_CONCURRENT=1
-export HINDSIGHT_API_EMBEDDINGS_LOCAL_ALLOW_MPS=true
-export HINDSIGHT_API_RERANKER_LOCAL_ALLOW_MPS=true
-export HINDSIGHT_API_RERANKER_LOCAL_FP16=true
 export HF_HUB_OFFLINE=1
 hindsight-api
 

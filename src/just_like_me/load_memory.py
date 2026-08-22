@@ -33,7 +33,7 @@ def context_aware_conversation_generator(turns, max_turns_per_chunk=10):
       yield session_id, [k for j in chunk for k in j]
 
 
-def run_memory_pipeline(max_turns_per_chunk: int = 10):
+def run_memory_pipeline(max_turns_per_chunk):
   last_timestamp = memory_checkpoint.read()
   conn = connect()
   cursor = conn.cursor()
@@ -67,10 +67,10 @@ def run_memory_pipeline(max_turns_per_chunk: int = 10):
       batch_started_at = time.perf_counter()
       raw_messages = json.dumps(messages)
       logger.info(
-        "Starting memory batch %d: session_id=%s messages_size=%d",
+        "Starting memory batch %d: session_id=%s messages_size=%s",
         batch_index,
         session_id,
-        len(raw_messages)
+        ", ".join([str(len(messages)),str(len(raw_messages))])
       )
       memory_client.retain(
         bank_id=bank_id,
@@ -80,7 +80,8 @@ def run_memory_pipeline(max_turns_per_chunk: int = 10):
         metadata={
           "source": "cron_memory_pipeline",
           "session_id": session_id
-        }
+        },
+        retain_async=True
       )
 
       processed_batches = batch_index
@@ -106,8 +107,8 @@ def main() -> None:
   parser.add_argument(
     "--max-turns-per-chunk",
     type=int,
-    default=10,
-    help="Maximum number of turns to process in one memory batch (default: 10)",
+    default=2,
+    help="Maximum number of turns to process in one memory batch (default: 2)",
   )
   args = parser.parse_args()
 
