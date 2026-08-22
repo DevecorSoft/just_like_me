@@ -53,9 +53,10 @@ def run_memory_pipeline(max_turns_per_chunk):
   messages_generator = context_aware_conversation_generator(rows,
                                                             max_turns_per_chunk)
 
-  logger.info("Initializing Hindsight client: %s", hindsight_config["base_url"])
-  memory_client = Hindsight(base_url=hindsight_config["base_url"])
-  bank_id = hindsight_config["bank_id"]
+  base_url = "http://localhost:8888"
+  logger.info("Initializing Hindsight client: %s", base_url)
+  memory_client = Hindsight(base_url=base_url)
+  bank_id = "just_like_me"
   pipeline_started_at = time.perf_counter()
   processed_batches = 0
 
