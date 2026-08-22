@@ -15,6 +15,7 @@ dependencies = [
 "just_like_me.load_memory" = "just_like_me.load_memory:main"
 "just_like_me.daemon.install" = "just_like_me.daemon:install"
 "just_like_me.daemon.uninstall" = "just_like_me.daemon:uninstall"
+"just_like_me.skills.install" = "just_like_me.skills:main"
 
 [build-system]
 requires = ["uv_build>=0.12.3,<0.13.0"]
