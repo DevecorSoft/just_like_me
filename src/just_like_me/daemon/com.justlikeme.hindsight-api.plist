@@ -15,7 +15,7 @@
         <key>HINDSIGHT_API_LLM_PROVIDER</key>
         <string>ollama</string>
         <key>HINDSIGHT_API_LLM_MODEL</key>
-        <string>muse-glimmer:30b-mlx</string>
+        <string>qwen3.8:27b</string>
         <key>HINDSIGHT_API_LLM_TIMEOUT</key>
         <string>1200</string>
         <key>HINDSIGHT_API_REFLECT_WALL_TIMEOUT</key>
@@ -26,6 +26,8 @@
         <string>1</string>
         <key>HINDSIGHT_API_RETAIN_MAX_CONCURRENT</key>
         <string>1</string>
+        <key>HINDSIGHT_API_DATABASE_URL</key>
+        <string>postgresql://postgres:mysecretpassword@localhost:15432/hindsight</string>
         <key>HF_HUB_OFFLINE</key>
         <string>1</string>
     </dict>

@@ -16,6 +16,17 @@ Copies the packaged skill to `~/.agents/skills/recall-memory/SKILL.md`.
 ## Start Hindsight
 
 ```shell
+docker run -d \
+  --name hindsight-postgres \
+  --restart unless-stopped \
+  -p 15432:5432 \
+  -e POSTGRES_DB=hindsight \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=mysecretpassword \
+  pgvector/pgvector:pg16
+```
+
+```shell
 uv tool install hindsight-api
 
 export HINDSIGHT_API_LLM_PROVIDER=ollama
@@ -25,6 +36,7 @@ export HINDSIGHT_API_REFLECT_WALL_TIMEOUT=1200
 export HINDSIGHT_API_LLM_SEND_BANK_AS_USER=true
 export HINDSIGHT_API_LLM_MAX_CONCURRENT=1
 export HINDSIGHT_API_RETAIN_MAX_CONCURRENT=1
+export HINDSIGHT_API_DATABASE_URL=postgresql://postgres:mysecretpassword@localhost:15432/hindsight
 export HF_HUB_OFFLINE=1
 hindsight-api
 ```
