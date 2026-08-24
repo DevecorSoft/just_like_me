@@ -23,6 +23,7 @@ docker run -d \
   -e POSTGRES_DB=hindsight \
   -e POSTGRES_USER=postgres \
   -e POSTGRES_PASSWORD=mysecretpassword \
+  -v hindsight_pgdata:/var/lib/postgresql/data \
   pgvector/pgvector:pg16
 ```
 
