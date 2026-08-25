@@ -81,6 +81,12 @@ def run_memory_pipeline(max_turns_per_chunk):
           "source": "cron_memory_pipeline",
           "session_id": session_id
         },
+        tags=[
+          "source:cron-pipeline",
+          "project:just_like_me",
+          "env:work",
+          "memory:history"
+        ],
         retain_async=True
       )
 
