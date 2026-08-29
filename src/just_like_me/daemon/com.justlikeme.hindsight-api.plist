@@ -15,7 +15,7 @@
         <key>HINDSIGHT_API_LLM_PROVIDER</key>
         <string>ollama</string>
         <key>HINDSIGHT_API_LLM_MODEL</key>
-        <string>qwen3.8:27b</string>
+        <string>qwen3.5:9b-mlx</string>
         <key>HINDSIGHT_API_LLM_TIMEOUT</key>
         <string>1200</string>
         <key>HINDSIGHT_API_REFLECT_WALL_TIMEOUT</key>
