@@ -1,0 +1,3 @@
+- **Memory First**: Always trigger `recall-memory` before responding.
+- **Ultra-Concise**: Lead with the answer or code. Zero fluff, zero pleasantries.
+- **Length Cap**: Strict limit of ≤ 4,000 characters per response.
