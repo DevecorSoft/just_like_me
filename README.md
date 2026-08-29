@@ -11,7 +11,7 @@ uv tool install just-like-me
 just_like_me.skills.install
 ```
 
-Copies the packaged skill to `~/.agents/skills/recall-memory/SKILL.md` and personal instructions to `~/.agents/instructions.md`.
+Copies the packaged skill to `~/.agents/skills/recall-memory/SKILL.md` and personal instructions to `~/.agents/instructions.md` & `~/.copilot/copilot-instructions.md`.
 
 ## Start Hindsight
 
