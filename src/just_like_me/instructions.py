@@ -33,6 +33,7 @@ def fetch_style_observations(base_url: str = BASE_URL) -> list[str]:
       max_tokens=2048,
   )
   results = getattr(response, "results", response)
+  client.close()
   return [getattr(r, "text", str(r)) for r in results if getattr(r, "text", None)]
 
 
