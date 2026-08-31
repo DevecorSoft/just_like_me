@@ -18,6 +18,8 @@ just_like_me.instructions.install
 ## Start Hindsight
 
 ```shell
+docker volume create hindsight_pgdata
+
 docker run -d \
   --name hindsight-postgres \
   --restart unless-stopped \
