@@ -10,7 +10,7 @@ Run recall on every task to keep responses aligned with long-term context.
 ## Usage
 
 ```shell
-hindsight memory recall just_like_me "<semantic query>" --fact-type world,observation --budget mid --max-tokens 2048
+hindsight memory recall just_like_me "<semantic query>" --fact-type experience,observation --budget mid --max-tokens 2048
 ```
 
 Results are structured facts ranked by relevance. Observations are consolidated, evidence-grounded beliefs preferred over raw facts.

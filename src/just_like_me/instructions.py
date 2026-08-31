@@ -11,7 +11,7 @@ INSTRUCTION_TARGET_PATHS = [
 
 BANK_ID = "just_like_me"
 BASE_URL = "http://localhost:8888"
-QUERY = "user coding style preference personality decision making constraints correction"
+REFLECT_QUERY = """Please summarize the user's personality traits, behavioral habits, coding style preferences, and decision-making principles from past interactions into 3-5 concise, high-density bullet points. Format strictly as bullet items (e.g. - **Trait Name**: Description)."""
 
 PROMPT_TEMPLATE = """# User Persona & Behavioral Style
 {traits}
@@ -23,27 +23,24 @@ PROMPT_TEMPLATE = """# User Persona & Behavioral Style
 """
 
 
-def fetch_style_observations(base_url: str = BASE_URL) -> list[str]:
+def fetch_style_by_reflect(base_url: str = BASE_URL) -> str:
   client = Hindsight(base_url=base_url)
-  response = client.recall(
+  response = client.reflect(
       bank_id=BANK_ID,
-      query=QUERY,
-      types=["observation"],
-      budget="high",
-      max_tokens=2048,
+      query=REFLECT_QUERY,
+      budget="low",
+      max_tokens=1024,
   )
-  results = getattr(response, "results", response)
   client.close()
-  return [getattr(r, "text", str(r)) for r in results if getattr(r, "text", None)]
+  return response.text.strip() if response and response.text else ""
 
 
-def update() -> None:
-  observations = fetch_style_observations()
-  if not observations:
-    print("No style observations found from Hindsight.")
+def reflect() -> None:
+  traits_text = fetch_style_by_reflect()
+  if not traits_text:
+    print("No reflect response returned from Hindsight.")
     return
 
-  traits_text = "\n".join(f"- {obs}" for obs in observations[:5])
   content = PROMPT_TEMPLATE.format(traits=traits_text)
 
   instructions_file = Path(__file__).parent / "instructions.md"

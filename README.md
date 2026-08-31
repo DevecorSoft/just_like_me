@@ -69,12 +69,13 @@ just_like_me.load_memory --max-turns-per-chunk 10
 
 Reads from the read-only Copilot SQLite session store, checkpoints progress, and retains conversations via the Hindsight client at `http://localhost:8888`.
 
-Update personal instructions from consolidated style observations:
+Update personal instructions via Hindsight reflection:
 
 ```shell
-just_like_me.instructions.install
-just_like_me.instructions.update
+just_like_me.instructions.reflect
 ```
+
+
 
 ## Recall
 
