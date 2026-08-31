@@ -9,9 +9,11 @@ Hindsight owns cognition (retain → recall → observations → reflect). This 
 ```shell
 uv tool install just-like-me
 just_like_me.skills.install
+just_like_me.instructions.install
 ```
 
-Copies the packaged skill to `~/.agents/skills/recall-memory/SKILL.md` and personal instructions to `~/.agents/instructions.md` & `~/.copilot/copilot-instructions.md`.
+- `just_like_me.skills.install`: Copies the packaged skill to `~/.agents/skills/recall-memory/SKILL.md`.
+- `just_like_me.instructions.install`: Copies personal instructions to `~/.agents/instructions.md` & `~/.copilot/copilot-instructions.md`.
 
 ## Start Hindsight
 
