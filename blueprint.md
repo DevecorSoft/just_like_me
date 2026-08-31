@@ -1,39 +1,35 @@
-# Just Like Me (V5.1)
+# Just Like Me (V6.0)
 
 > **Make Agents More Like You.**
 
-**Technical positioning:** A local behavior-evolution control plane for coding agents,
-powered by Hindsight.
+**Technical positioning:** A personal regression suite for coding agents, with
+an eval-gated publish hook. Powered by Hindsight.
 
-Just Like Me is not a general memory engine, a reflection engine, or an agent runtime.
-It is a local control plane that decides whether evidence-grounded knowledge is allowed
-to change a coding agent's future behavior.
+Just Like Me is not a memory engine, a reflection engine, an agent runtime, or
+an enterprise behavior-governance platform. It is a small, local tool that
+turns the user's corrections into replayable evals, and refuses to publish any
+behavior artifact (instructions, Skills, directives) that fails them.
 
 Hindsight owns cognition:
 
 ```text
-retain -> recall -> observations -> reflect
+retain -> recall -> observations -> mental models / knowledge pages
 ```
 
-This project owns behavioral governance:
+This project owns verification:
 
 ```text
-propose -> eval -> approve -> publish -> monitor -> rollback
+correction -> eval case -> suite -> pre-publish gate
 ```
 
-The first supported host is GitHub Copilot CLI. The control-plane model may later
-support other coding agents through explicit adapters, but it must not rebuild their
-agent loops.
-
-"Local" means that Hindsight, evidence, proposals, evals, approvals, and publication
-state can remain on the user's machine. The coding agent continues to use its
-configured model service; this project does not claim to make the host model inference
-local.
+Git owns versioning and rollback. The coding agent (GitHub Copilot CLI first)
+owns execution.
 
 The central rule is:
 
 > A grounded reflection is a source of evidence, not permission to modify
-> agent behavior.
+> agent behavior. Behavior artifacts must pass the personal eval suite before
+> they are published.
 
 ---
 
@@ -41,21 +37,22 @@ The central rule is:
 
 ### 1.1 What This Project Is
 
-- a behavior-change proposal system for coding agents;
-- a correction-to-eval compiler;
-- a reviewed compiler from successful workflows to versioned Skills;
-- a publisher with explicit scope, versioning, monitoring, and rollback;
-- an audit trail connecting every behavior change to Hindsight and execution evidence.
+- a correction-to-eval compiler: explicit user corrections become minimal,
+  pinned, replayable eval cases;
+- a personal eval suite that accumulates over time;
+- a thin pre-publish gate: run the suite before writing any behavior artifact;
+- a repeated-correction report that measures whether the loop works.
 
 ### 1.2 What This Project Is Not
 
 - another fact extractor, vector database, graph memory, or reranker;
-- another observation-consolidation or generic reflection implementation;
-- a replacement for Hindsight's Copilot integration;
-- a complete autonomous agent runtime such as Letta;
-- a general evaluation platform;
-- an automatic prompt or instruction rewriter;
-- a near-term model fine-tuning or LoRA system.
+- a replacement for Hindsight or its coding-agent plugin;
+- an enterprise control plane: no proposal registry, no approval state
+  machine, no transactional publisher, no monitoring platform — for a single
+  user these are ceremony. Approval is the user reading a diff; versioning and
+  rollback are git;
+- a general evaluation framework or benchmark harness;
+- a model fine-tuning or LoRA system.
 
 ---
 
@@ -63,60 +60,44 @@ The central rule is:
 
 ```text
 +--------------------------------------------------------------------------+
-|                       Coding Agent Host                                  |
-|                                                                          |
-|  GitHub Copilot CLI (first adapter)                                      |
-|  ├── official hooks / Hindsight coding-agent plugin                      |
-|  ├── transcript and tool outcomes                                       |
-|  └── agent-specific Skills, context, and instructions                    |
-+-----------------------------------+--------------------------------------+
+|  GitHub Copilot CLI                                                       |
+|  ├── Hindsight coding-agent plugin (hooks, auto-retain, knowledge tools)  |
+|  └── published artifacts: instructions, Skills, directives                |
++-----------------------------------+----------------------------------------+
                                     |
-                                    v
-+--------------------------------------------------------------------------+
-|                 Hindsight Cognition Plane (adopted)                      |
-|                                                                          |
-|  retain -> world/experience facts -> observations                        |
-|  recall -> semantic / keyword / graph / temporal retrieval               |
-|  reflect -> evidence-grounded synthesis with source lineage              |
-+-----------------------------------+--------------------------------------+
-                                    |
-                                    | observations, source facts,
-                                    | reflect citations, session outcomes
-                                    v
-+--------------------------------------------------------------------------+
-|                    Just Like Me Behavior Control Plane                    |
-|                                                                          |
-|  BehaviorChangeProposal (not implemented)                                |
-|    -> generate personal eval                                             |
-|    -> run deterministic gates                                            |
-|    -> human approval                                                     |
-|    -> publish versioned Skill / scoped policy                            |
-|    -> monitor outcomes                                                   |
-|    -> supersede or roll back                                             |
-+--------------------------------------------------------------------------+
++-----------------------------------v----------------------------------------+
+|  Hindsight (self-hosted, localhost:8888, bank: just_like_me)               |
+|  retain / recall / observations / mental models / knowledge pages /        |
+|  directives — evidence and synthesis, all precomputed off the hot path     |
++-----------------------------------+----------------------------------------+
+                                    | corrections + evidence
++-----------------------------------v----------------------------------------+
+|  Just Like Me                                                              |
+|  eval_compiler: correction -> pinned eval case (git-tracked)               |
+|  eval_runner:   deterministic oracles first; versioned LLM judge last      |
+|  publish:       run suite -> pass -> write artifact -> git commit          |
+|                 rollback = git revert + re-publish                         |
+|  report:        repeated-correction rate from the Copilot turns store      |
++----------------------------------------------------------------------------+
 ```
-
-The Hindsight plugin may put cognition on the session boundary or first prompt. The
-behavior control plane stays off the interactive hot path.
 
 ---
 
 ## 3. Current Status
 
-The cognition cutover to Hindsight is complete. Mem0, Qdrant, and the custom warm
-recall daemon have been removed; Hindsight is the single memory and reflection source
-of truth.
+The cognition cutover to Hindsight is complete. Mem0, Qdrant, and the custom
+warm recall daemon have been removed; Hindsight is the single memory and
+reflection source of truth.
 
-| Capability                       | Status                      | Current / Target Technology                                               |
-|----------------------------------|-----------------------------|---------------------------------------------------------------------------|
-| Copilot conversation ingestion   | Implemented                 | Read-only Copilot SQLite -> `hindsight_client.retain` with checkpointing  |
-| Cognition plane                  | Adopted                     | Self-hosted Hindsight (launchd `com.justlikeme.hindsight-api`)            |
-| Recall                           | Implemented                 | `recall-memory` Copilot Skill -> `hindsight memory recall` CLI            |
-| Instruction publication          | Implemented, **ungoverned** | Hindsight mental model -> persona -> `~/.copilot/copilot-instructions.md` |
-| BehaviorChangeProposal registry  | Not implemented             | Local control-plane SQLite                                                |
-| Correction-to-eval               | Not implemented             | Project-owned                                                             |
-| Skill compilation and approval   | Not implemented             | Project-owned                                                             |
-| Versioning, monitoring, rollback | Not implemented             | Project-owned                                                             |
+| Capability | Status | Technology |
+| --- | --- | --- |
+| Copilot conversation ingestion | Implemented | Copilot SQLite -> `hindsight_client.retain` with checkpointing (`load_memory.py`) |
+| Cognition plane | Adopted | Self-hosted Hindsight (launchd `com.justlikeme.hindsight-api`) |
+| Recall | Implemented | `recall-memory` Copilot Skill -> `hindsight memory recall` CLI |
+| Instruction publication | Implemented, **ungated** | Hindsight mental model -> persona -> `~/.copilot/copilot-instructions.md` (`instructions.py`) |
+| Correction-to-eval | Not implemented | Project-owned, next |
+| Pre-publish gate | Not implemented | Project-owned, next |
+| Repeated-correction report | Not implemented | Project-owned |
 
 Current repository entry points (see `pyproject.toml` scripts):
 
@@ -127,378 +108,172 @@ src/just_like_me/skills.py         # installs the recall-memory Skill
 src/just_like_me/instructions.py   # mental-model -> instructions publish
 ```
 
-### 3.1 Known Governance Gap
+### 3.1 Operational Findings (2026-08-31)
 
-`instructions.py` currently violates the central rule: an LLM-produced mental model is
-written to global Copilot instructions with no eval, no approval, no versioning, and no
-rollback. It is exactly the "automatic instruction rewriter" that Section 1.2 excludes.
-It is retained deliberately as the **first governance target**: wrapping this existing
-publish path in the minimal control plane (diff, version record, manual confirmation,
-rollback) is the cheapest path to a working end-to-end governance demo.
+These are measured on the target machine, not assumptions:
+
+1. **First-prompt Reflect injection has never succeeded locally.** The plugin
+   log shows 100% `reflect_failed` (~25s abort) for Copilot CLI sessions; a
+   direct `hindsight memory reflect` exceeds two minutes on this bank with
+   local models. The official benchmark's "reflect in seconds" assumes cloud
+   inference. Consequence: **on a fully local stack, injection must come from
+   precomputed artifacts** — mental models, knowledge pages, directives — plus
+   on-demand recall. Do not depend on on-demand reflect.
+2. **`instructions.py` is therefore directionally correct** (read a
+   precomputed mental model, publish it), but it is ungated: an LLM-produced
+   persona is written to global instructions with no eval and no gate. It is
+   the first publish path to put behind the gate.
+3. **`load_memory.py` overlaps with the plugin's auto-retain.** It remains
+   justified only for historical backfill and checkpointed batch ingestion;
+   do not extend it.
+4. The bank shows failed/pending consolidation operations; local model
+   configuration needs an operations pass before eval work depends on
+   observation quality.
 
 ---
 
 ## 4. Responsibility Model
 
-### 4.1 Hindsight Owns Cognition
-
-Prefer Hindsight's existing capabilities instead of rebuilding them:
-
-- conversation and document retention;
-- world and experience fact extraction;
-- entity, causal, semantic, graph, and temporal relationships;
-- multi-strategy recall and reranking;
-- evidence-backed Observations and contradiction refinement;
-- Mental Models and Knowledge Pages;
-- agentic Reflect with source citations;
-- memory-bank scopes, missions, dispositions, and directives;
-- Copilot transcript ingestion and baseline context integration.
-
-Hindsight Observations may evolve as evidence changes. They are beliefs in the
-cognition plane, not immutable behavior policies.
-
-### 4.2 This Project Owns Behavior Governance
-
-The project begins where Hindsight stops:
-
-- decide whether an Observation implies a possible behavior change;
-- associate that change with concrete Copilot corrections and tool outcomes;
-- create a reproducible eval before publication;
-- generate an inspectable Skill or policy diff;
-- require approval according to risk;
-- publish through an agent-specific adapter;
-- monitor subsequent outcomes;
-- supersede or roll back harmful and stale behavior.
-
-### 4.3 The Coding Agent Owns Execution
-
-Copilot CLI remains responsible for:
-
-- interpreting the user's current request;
-- planning and executing tools;
-- editing repositories;
-- requesting additional memory or reflection when needed;
-- enforcing its native safety and permission model.
-
-The control plane does not proxy or replace the agent loop.
-
-### 4.4 Hard Boundary
-
 ```text
 Need to remember or synthesize knowledge?
-  -> Hindsight
+  -> Hindsight (retain, recall, observations, mental models, pages, directives)
 
-Need to decide whether knowledge may change future behavior?
-  -> Just Like Me
+Need to verify that knowledge may change future behavior?
+  -> Just Like Me (correction-to-eval, pre-publish gate)
+
+Need versioning, diff review, or rollback?
+  -> git
 
 Need to perform the current task?
   -> coding agent
 ```
 
+Why the gate cannot live inside Hindsight: Hindsight's products are evolving
+beliefs and injected prose — there is no runner, no assertion primitive, no
+pass/fail state. Evals must be pinned (immutable), deterministic where
+possible, and able to reject writes into Hindsight itself. Evidence lives in
+Hindsight; the check and the gate live outside it.
+
 ---
 
-## 5. Core Domain Object
+## 5. Core Object: the Eval Case
 
-The primary project object is a `BehaviorChangeProposal`, not a memory:
+The primary object is a pinned, replayable eval case compiled from a real
+correction:
 
-```json
-{
-  "id": "bcp-2026-001",
-  "target": {
-    "agent": "github-copilot-cli",
-    "artifact_type": "skill",
-    "scope": "debugging"
-  },
-  "proposed_change": "Diagnose the root cause before editing code",
-  "hindsight_evidence": {
-    "observation_ids": [
-      "obs-123"
-    ],
-    "memory_ids": [
-      "mem-456",
-      "mem-789"
-    ],
-    "source_quotes": [
-      "User: Find the root cause first."
-    ],
-    "snapshot_hash": "sha256:..."
-  },
-  "outcome_evidence": {
-    "session_ids": [
-      "session-a"
-    ],
-    "tool_result_refs": [
-      "session-a:tool-9"
-    ],
-    "observed_result": "tests_passed"
-  },
-  "eval": {
-    "id": "eval-debug-root-cause",
-    "status": "passed"
-  },
-  "artifact_diff": "versioned diff or generated artifact reference",
-  "risk": "medium",
-  "status": "evaluated",
-  "approval": null,
-  "publication": null,
-  "rollback": null
-}
+```yaml
+id: eval-concise-instructions
+source:                       # auditable evidence anchors
+  turn: "session-xxx#turn-42"
+  quote: "语义正确，但是很啰嗦，不得真意"
+  hindsight_memory_ids: ["mem-456"]
+  snapshot_hash: "sha256:..."   # evidence pinned; Hindsight originals may evolve
+input: "生成个人 instruction，要求语言洗练"
+assert:
+  - type: max_chars           # deterministic oracle, preferred
+    value: 4000
+  - type: llm_judge           # last resort; judge model + prompt version pinned
+    rubric: "无客套、无废话、直给结论"
+    judge: "model@version"
 ```
 
-Because Hindsight Observations can change, a proposal must pin both source IDs and an
-evidence snapshot/hash. Exact source facts and quotes remain the auditable ground
-truth.
+Rules:
 
-Lifecycle:
+1. deterministic oracles first: char counts, exit codes, file assertions,
+   test results;
+2. an LLM judge is a last resort and its model and prompt version are pinned;
+3. failed runs are retained as evidence, never hidden;
+4. cases are git-tracked files — the suite's history is its audit trail.
+
+---
+
+## 6. Workflow
+
+### 6.1 Compile
+
+Detect explicit corrections in the Copilot turns store (and Hindsight
+evidence) and compile each into a minimal eval case. Ordinary facts and
+preferences stay in Hindsight and do not become evals.
+
+### 6.2 Gate
+
+`publish` is the only write path for behavior artifacts:
 
 ```text
-proposed
-  -> evaluated
-  -> approved
-  -> published
-  -> monitored
-  -> superseded / rolled_back
-
-proposed / evaluated
-  -> rejected
+candidate artifact (persona, Skill, directive)
+  -> run the full personal eval suite
+  -> pass: write target file(s), git commit with evidence refs
+  -> fail: refuse, keep the failure on record
 ```
 
-An LLM score may prioritize review but cannot change lifecycle state by itself.
+Publication targets: `~/.copilot/copilot-instructions.md`, `~/.agents/skills/`,
+Hindsight directives. Human-authored files are preserved; writes are atomic.
+
+### 6.3 Measure
+
+Periodically mine the turns store for repeated corrections (same cluster
+corrected more than once). This number decides the project's fate (Section 7).
 
 ---
 
-## 6. Behavior-Evolution Workflow
+## 7. Value Gate and Stop Conditions
 
-### 6.1 Observe
-
-Prefer the official Hindsight coding-agent plugin and Copilot hooks for transcript
-ingestion, baseline recall/reflect, and memory-bank scoping.
-
-Project-specific hooks should capture only outcome signals that Hindsight does not
-expose with sufficient structure, such as:
-
-- explicit user correction or confirmation;
-- test and command results;
-- failed tool calls;
-- reverted edits;
-- final task outcome.
-
-Do not ingest the same transcript independently unless required for the shadow
-evaluation or a documented Hindsight integration gap.
-
-### 6.2 Propose
-
-A local model may combine Hindsight Observations, cited source facts, and outcome
-evidence into a `BehaviorChangeProposal`.
-
-Valid proposal types:
-
-| Type           | Meaning                                      | Typical Target                               |
-|----------------|----------------------------------------------|----------------------------------------------|
-| **Policy**     | A scoped behavioral rule                     | Hindsight directive or dynamic agent context |
-| **Procedure**  | A repeatable successful workflow             | Versioned coding-agent Skill                 |
-| **Evaluation** | A reproducible acceptance criterion          | Personal eval suite                          |
-| **Exception**  | A counterexample narrowing an existing asset | Scope update or regression case              |
-
-Ordinary facts, preferences, and summaries stay in Hindsight and do not become
-control-plane proposals.
-
-### 6.3 Evaluate
-
-Create the regression guard before publishing behavior:
-
-1. convert explicit corrections into minimal replayable cases;
-2. prefer deterministic checks, tests, command results, and artifact assertions;
-3. use an LLM judge only when no deterministic oracle exists, and record its model and
-   prompt version;
-4. run existing personal evals to detect regressions;
-5. retain failed evaluations as evidence rather than hiding them.
-
-The MVP is correction-to-eval, not a general evaluation framework.
-
-### 6.4 Approve
-
-Initial approval is always manual. Review must show:
-
-- the proposed behavior change;
-- exact Hindsight sources and Copilot outcome evidence;
-- counter-evidence and scope;
-- generated artifact diff;
-- eval results;
-- publication and rollback plans.
-
-Automation may be introduced only for low-risk changes after measured safety.
-
-### 6.5 Publish
-
-Publication is adapter-specific and transactional:
-
-1. publish or update the personal eval;
-2. create a versioned Skill candidate or scoped dynamic policy;
-3. publish approved policies to a Hindsight directive when they should govern Reflect,
-   or to an agent context adapter when they should govern execution;
-4. preserve all user-authored instructions;
-5. record artifact hash, target, timestamp, and rollback reference.
-
-Static global instructions are a last resort. Dynamic scoped context and Skills are
-preferred.
-
-### 6.6 Monitor and Roll Back
-
-After publication, compare future outcomes with the proposal's baseline:
-
-- repeated correction rate;
-- eval pass rate;
-- tool/test success;
-- task retries or reverted changes;
-- counter-evidence from newer Hindsight Observations.
-
-Regression, contradiction, or explicit user rejection must supersede or roll back the
-published artifact. Rollback is part of publication, not a later feature.
-
----
-
-## 7. Hindsight Migration Status
-
-### 7.1 Phase A: Shadow PoC — Completed
-
-Hindsight was evaluated against the Mem0 baseline on recall relevance, reflect quality,
-evidence lineage, Copilot integration, local operation, latency, resource use, and
-recovery, and it passed.
-
-### 7.2 Phase B: Cognition Cutover — Completed
-
-Hindsight is the single memory and reflection source of truth. Ingestion runs from
-authoritative Copilot transcripts (`load_memory.py`), recall goes through the
-`recall-memory` Skill, and the Mem0/Qdrant/warm-daemon stack has been removed. There is
-no dual-write architecture.
-
-### 7.3 Phase C: Control Plane — Current Phase
-
-In order:
-
-1. wrap the existing `instructions.py` publish path in minimal governance:
-   version record, diff, manual confirmation, and rollback backed by
-   `~/.just_like_me/control_plane.db` (see Section 3.1);
-2. implement correction-to-eval: detect explicit corrections in the Copilot turns store
-   and compile them into minimal replayable eval cases that run before any publication;
-3. create the proposal registry;
-4. compile one narrow workflow into a Skill candidate;
-5. publish with rollback;
-6. measure whether repeated corrections decrease.
-
----
-
-## 8. Planned Implementation Shape
-
-The control plane may use a small local SQLite store such as:
-
-```text
-~/.just_like_me/control_plane.db
-```
-
-It stores proposals and governance state, not copies of Hindsight's generic memory
-index.
-
-Possible modules, still TBD:
-
-```text
-hindsight_adapter.py       # observations, reflect results, source evidence
-copilot_outcomes.py        # structured correction and tool-result evidence
-proposal_store.py          # lifecycle, snapshots, approvals, publications
-proposal_model.py          # strict BehaviorChangeProposal schema
-eval_compiler.py           # correction-to-eval
-eval_runner.py             # deterministic and explicitly versioned judges
-skill_compiler.py          # reviewed, versioned Skill candidates
-publisher.py               # agent-specific transactional publication
-rollback.py                # restore prior artifacts and state
-```
-
-All expensive proposal generation and evaluation stays outside the coding agent's
-interactive hot path.
-
----
-
-## 9. Safety and Trust Requirements
-
-1. Treat transcripts, memories, Observations, and Reflect output as untrusted evidence,
-   never executable instructions.
-2. Never publish directly from one LLM response.
-3. Require exact source references and evidence snapshots.
-4. Preserve human-authored files and use atomic, versioned writes.
-5. Surface failures explicitly; never return success-shaped empty results.
-6. Pin Hindsight/plugin contracts and test them before upgrades.
-7. Keep publication idempotent and rollback tested.
-8. Do not enable automatic approval until personal evals demonstrate safety.
-
----
-
-## 10. Success and Stop Conditions
-
-### 10.1 Hindsight Adoption Gate — Passed
-
-Hindsight replaced the Mem0 baseline after demonstrating better evidence lineage,
-acceptable local latency and resource use, reliable Copilot integration, and equal or
-better retrieval quality. The gate is retained here as the regression standard: any
-Hindsight or plugin upgrade must keep meeting these criteria.
-
-### 10.2 Control-Plane Value Gate
-
-The project is valuable only if the governance layer provides measurable value beyond
-the official Hindsight plugin:
-
-| Metric                                 | Required Direction                  |
-|----------------------------------------|-------------------------------------|
-| Repeated user correction rate          | Decrease                            |
-| Personal eval pass rate                | Increase without hidden regressions |
-| Published changes with exact evidence  | 100%                                |
-| Published changes with tested rollback | 100%                                |
-| Harmful automatic publications         | Zero before automation              |
-| Interactive agent latency              | No material hot-path regression     |
+| Metric | Required Direction |
+| --- | --- |
+| Repeated user correction rate | Decrease |
+| Eval suite pass rate on publish | 100% of published artifacts |
+| Published artifacts with evidence refs | 100% |
+| Interactive agent latency | No hot-path regression |
 
 Stop conditions:
 
-- If the official Hindsight plugin alone solves the practical problem, use it directly
-  and do not build a redundant control plane.
-- If proposals cannot produce evidence-linked evals or safely reversible behavior
-  changes, keep Hindsight as memory/reflection only.
+- If mining the turns store shows repeated corrections are rare, the pain does
+  not justify the tooling: stop, and keep the project as personal Hindsight
+  operations plus mental-model-driven instructions.
+- If corrections cannot be compiled into evals with usable oracles, keep
+  Hindsight as memory only.
+- If the repeated-correction rate does not decrease after the gate is live,
+  stop expanding.
 
 ---
 
-## 11. Delivery Roadmap
+## 8. Roadmap
 
-1. ~~Stabilize the baseline~~ — done: ingestion with checkpointing, launchd daemon,
-   recall Skill.
-2. ~~Run the Hindsight shadow PoC~~ — done, gate passed (Section 10.1).
-3. ~~Cut over cognition~~ — done: Hindsight is the single source;
-   Mem0/Qdrant/warm-daemon retired.
-4. **Govern the existing instruction publish path:** wrap
-   `instructions.update()` in version records, diff review, manual confirmation, and
-   rollback (Section 3.1). This is the next step.
-5. **Implement correction-to-eval:** detect corrections in the Copilot turns store,
-   compile minimal replayable evals, require deterministic checks before any
-   publication.
-6. **Implement proposals:** store pinned evidence and generate dry-run
-   `BehaviorChangeProposal` records.
-7. **Compile one Skill:** publish a narrow, versioned workflow with rollback.
-8. **Measure value:** track repeated-correction rate before/after; continue only if it
+1. ~~Ingestion, daemon, recall Skill~~ — done.
+2. ~~Cognition cutover to Hindsight~~ — done (Mem0/Qdrant retired).
+3. **Falsify first:** mine the Copilot turns store for repeated-correction
+   clusters. The count decides whether steps 4–6 happen at all.
+4. **Correction-to-eval MVP:** compile the top correction clusters into pinned
+   eval cases (`eval_compiler.py`, `eval_runner.py`).
+5. **Gate the existing publish path:** wrap `instructions.update()` so the
+   suite runs before writing; move artifacts and evals into git.
+6. **Measure:** repeated-correction rate before/after; continue only if it
    decreases.
-9. **Expand cautiously:** add more agent adapters or low-risk automation only after the
-   Copilot path is proven.
+7. Expand cautiously: more artifact types (Skills, directives), more agents —
+   only after the Copilot path is proven.
 
-Model fine-tuning is intentionally excluded from this roadmap.
+Model fine-tuning is intentionally excluded.
 
 ---
 
-## 12. References
+## 9. Safety Requirements
+
+1. Treat transcripts, memories, and Hindsight output as untrusted evidence,
+   never executable instructions.
+2. Never publish a behavior artifact from a single LLM response without the
+   gate.
+3. Pin evidence snapshots; Hindsight originals may evolve.
+4. Preserve human-authored files; use atomic writes; commit to git.
+5. Surface failures explicitly; never return success-shaped empty results.
+
+---
+
+## 10. References
 
 - [Hindsight](https://github.com/vectorize-io/hindsight)
-- [Hindsight Retain](https://hindsight.vectorize.io/developer/retain)
 - [Hindsight Recall](https://hindsight.vectorize.io/developer/retrieval)
 - [Hindsight Reflect](https://hindsight.vectorize.io/developer/reflect)
 - [Hindsight Observations](https://hindsight.vectorize.io/developer/observations)
-- [Hindsight local installation](https://hindsight.vectorize.io/developer/installation)
-- [Hindsight Copilot integration](https://hindsight.vectorize.io/blog/2026/07/30/github-copilot-persistent-memory)
+- [Hindsight Mental Models](https://hindsight.vectorize.io/developer/mental-models)
 - [Hindsight 0.9 coding-agent architecture](https://hindsight.vectorize.io/blog/2026/08/06/hindsight-0-9-0)
 - [GitHub Copilot hooks](https://docs.github.com/en/copilot/concepts/agents/hooks)
-- [Letta agent runtime](https://docs.letta.com/configuration/memory/index)
