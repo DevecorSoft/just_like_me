@@ -69,12 +69,14 @@ just_like_me.load_memory --max-turns-per-chunk 10
 
 Reads from the read-only Copilot SQLite session store, checkpoints progress, and retains conversations via the Hindsight client at `http://localhost:8888`.
 
-Update personal instructions via Hindsight reflection:
+Update personal instructions from Hindsight Mental Model:
 
 ```shell
-just_like_me.instructions.reflect
+just_like_me.instructions.update
 ```
 
+- If the `just_like_me` Mental Model exists with generated content, it updates `instructions.md` instantly.
+- If it does not exist yet, it registers the Mental Model in Hindsight (configured with `mode: delta` and `refresh_after_consolidation: true`) and uses the default repository instructions until background reflection completes.
 
 
 ## Recall

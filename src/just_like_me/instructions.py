@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
+import asyncio
 from importlib.resources import files
 from pathlib import Path
 import shutil
 from hindsight_client import Hindsight
+from hindsight_client_api.exceptions import NotFoundException
+from hindsight_client_api.models.create_mental_model_request import CreateMentalModelRequest
+from hindsight_client_api.models.mental_model_trigger_input import MentalModelTriggerInput
+
 
 INSTRUCTION_TARGET_PATHS = [
     Path.home() / ".agents" / "instructions.md",
@@ -11,7 +16,12 @@ INSTRUCTION_TARGET_PATHS = [
 
 BANK_ID = "just_like_me"
 BASE_URL = "http://localhost:8888"
-REFLECT_QUERY = """Please summarize the user's personality traits, behavioral habits, coding style preferences, and decision-making principles from past interactions into 3-5 concise, high-density bullet points. Format strictly as bullet items (e.g. - **Trait Name**: Description)."""
+PERSONA_MODEL_NAME = "just_like_me"
+PERSONA_SOURCE_QUERY = """Please summarize the user's personality traits, behavioral habits, coding style preferences, and decision-making principles from past interactions into concise, high-density bullet points. Format strictly as bullet items (e.g. - **Trait Name**: Description)."""
+
+DEFAULT_FALLBACK_TRAITS = """- **Minimalist & Direct**: Strong aversion to redundancy, fluff, and boilerplate. Get straight to the point—deliver the final answer or code directly with zero pleasantries.
+- **Evidence-Based & Rigorous**: Ground decisions strictly in concrete data and runtime facts—never assume. Zero tolerance for trivial syntax errors or unverified edits; favor immutable data structures.
+- **High-Efficiency**: Always take the fastest, most direct path. Avoid over-engineering and needless abstractions."""
 
 PROMPT_TEMPLATE = """# User Persona & Behavioral Style
 {traits}
@@ -23,26 +33,35 @@ PROMPT_TEMPLATE = """# User Persona & Behavioral Style
 """
 
 
-def fetch_style_by_reflect(base_url: str = BASE_URL) -> str:
-  client = Hindsight(base_url=base_url)
-  response = client.reflect(
-      bank_id=BANK_ID,
-      query=REFLECT_QUERY,
-      budget="low",
-      max_tokens=1024,
-  )
-  client.close()
-  return response.text.strip() if response and response.text else ""
+async def _get_or_create_persona_mental_model(client: Hindsight) -> str:
+  try:
+    model = await client.mental_models.get_mental_model(bank_id=BANK_ID, mental_model_id=PERSONA_MODEL_NAME)
+    content = (model.content or "").strip()
+    return content if len(content) >= 100 else DEFAULT_FALLBACK_TRAITS
+  except NotFoundException:
+    req = CreateMentalModelRequest(
+        id=PERSONA_MODEL_NAME,
+        name=PERSONA_MODEL_NAME,
+        source_query=PERSONA_SOURCE_QUERY,
+        max_tokens=1024,
+        trigger=MentalModelTriggerInput(
+            mode="delta",
+            refresh_after_consolidation=True,
+            keep_trace=True,
+        ),
+    )
+    await client.mental_models.create_mental_model(bank_id=BANK_ID, create_mental_model_request=req)
+    return DEFAULT_FALLBACK_TRAITS
 
 
-def reflect() -> None:
-  traits_text = fetch_style_by_reflect()
-  if not traits_text:
-    print("No reflect response returned from Hindsight.")
-    return
+def update() -> None:
+  client = Hindsight(base_url=BASE_URL)
+  try:
+    traits = asyncio.run(_get_or_create_persona_mental_model(client))
+  finally:
+    client.close()
 
-  content = PROMPT_TEMPLATE.format(traits=traits_text)
-
+  content = PROMPT_TEMPLATE.format(traits=traits)
   instructions_file = Path(__file__).parent / "instructions.md"
   instructions_file.write_text(content, encoding="utf-8")
   print(f"Updated {instructions_file}")

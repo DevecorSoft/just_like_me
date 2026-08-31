@@ -17,7 +17,7 @@ dependencies = [
 "just_like_me.daemon.uninstall" = "just_like_me.daemon:uninstall"
 "just_like_me.skills.install" = "just_like_me.skills:install"
 "just_like_me.instructions.install" = "just_like_me.instructions:install"
-"just_like_me.instructions.reflect" = "just_like_me.instructions:reflect"
+"just_like_me.instructions.update" = "just_like_me.instructions:update"
 
 
 [build-system]
