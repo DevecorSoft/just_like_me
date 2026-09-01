@@ -13,9 +13,9 @@
     <key>EnvironmentVariables</key>
     <dict>
         <key>HINDSIGHT_API_LLM_PROVIDER</key>
-        <string>ollama</string>
+        <string>litellm</string>
         <key>HINDSIGHT_API_LLM_MODEL</key>
-        <string>qwen3.5:9b-mlx</string>
+        <string>github_copilot/gpt-4o</string>
         <key>HINDSIGHT_API_LLM_TIMEOUT</key>
         <string>1200</string>
         <key>HINDSIGHT_API_REFLECT_WALL_TIMEOUT</key>
@@ -23,9 +23,9 @@
         <key>HINDSIGHT_API_LLM_SEND_BANK_AS_USER</key>
         <string>true</string>
         <key>HINDSIGHT_API_LLM_MAX_CONCURRENT</key>
-        <string>1</string>
+        <string>2</string>
         <key>HINDSIGHT_API_RETAIN_MAX_CONCURRENT</key>
-        <string>1</string>
+        <string>2</string>
         <key>HINDSIGHT_API_DATABASE_URL</key>
         <string>postgresql://postgres:mysecretpassword@localhost:15432/hindsight</string>
         <key>HF_HUB_OFFLINE</key>
