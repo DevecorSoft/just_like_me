@@ -13,9 +13,13 @@
     <key>EnvironmentVariables</key>
     <dict>
         <key>HINDSIGHT_API_LLM_PROVIDER</key>
-        <string>litellm</string>
+        <string>openai</string>
+        <key>HINDSIGHT_API_LLM_BASE_URL</key>
+        <string>http://localhost:8000/v1</string>
+        <key>HINDSIGHT_API_LLM_API_KEY</key>
+        <string>""</string>
         <key>HINDSIGHT_API_LLM_MODEL</key>
-        <string>github_copilot/gpt-4o</string>
+        <string>mtplx-qwen35-9b-optimized-speed</string>
         <key>HINDSIGHT_API_LLM_TIMEOUT</key>
         <string>1200</string>
         <key>HINDSIGHT_API_REFLECT_WALL_TIMEOUT</key>
@@ -23,16 +27,14 @@
         <key>HINDSIGHT_API_LLM_SEND_BANK_AS_USER</key>
         <string>true</string>
         <key>HINDSIGHT_API_LLM_MAX_CONCURRENT</key>
-        <string>2</string>
+        <string>1</string>
         <key>HINDSIGHT_API_RETAIN_MAX_CONCURRENT</key>
-        <string>2</string>
+        <string>1</string>
         <key>HINDSIGHT_API_DATABASE_URL</key>
         <string>postgresql://postgres:mysecretpassword@localhost:15432/hindsight</string>
         <key>HF_HUB_OFFLINE</key>
         <string>1</string>
     </dict>
-    <key>WorkingDirectory</key>
-    <string>/Users/zhengfengcai/house/just_like_me</string>
     <key>RunAtLoad</key>
     <true/>
     <key>KeepAlive</key>

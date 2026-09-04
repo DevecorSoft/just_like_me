@@ -34,8 +34,10 @@ docker run -d \
 ```shell
 uv tool install hindsight-api
 
-export HINDSIGHT_API_LLM_PROVIDER=ollama
-export HINDSIGHT_API_LLM_MODEL=muse-glimmer:30b-mlx
+export HINDSIGHT_API_LLM_PROVIDER=openai
+export HINDSIGHT_API_LLM_API_KEY=1
+export HINDSIGHT_API_LLM_BASE_URL=http://localhost:8000/v1
+export HINDSIGHT_API_LLM_MODEL=mtplx-qwen35-9b-optimized-speed
 export HINDSIGHT_API_LLM_TIMEOUT=1200
 export HINDSIGHT_API_REFLECT_WALL_TIMEOUT=1200
 export HINDSIGHT_API_LLM_SEND_BANK_AS_USER=true

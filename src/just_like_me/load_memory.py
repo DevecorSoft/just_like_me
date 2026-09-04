@@ -54,7 +54,7 @@ def run_memory_pipeline(max_turns_per_chunk):
 
   base_url = "http://localhost:8888"
   logger.info("Initializing Hindsight client: %s", base_url)
-  memory_client = Hindsight(base_url=base_url)
+  memory_client = Hindsight(base_url=base_url, timeout=1200)
   bank_id = "just_like_me"
   pipeline_started_at = time.perf_counter()
   processed_batches = 0
@@ -87,7 +87,7 @@ def run_memory_pipeline(max_turns_per_chunk):
           "env:work",
           "memory:history"
         ],
-        retain_async=True
+        retain_async=False,
       )
 
       processed_batches = batch_index
