@@ -10,8 +10,7 @@ from hindsight_client_api.models.mental_model_trigger_input import MentalModelTr
 
 
 INSTRUCTION_TARGET_PATHS = [
-    Path.home() / ".agents" / "instructions.md",
-    Path.home() / ".copilot" / "copilot-instructions.md",
+    Path.home() / ".copilot" / "instructions" / "just-like-me-instructions.md",
 ]
 
 BANK_ID = "just_like_me"
