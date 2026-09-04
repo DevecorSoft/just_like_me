@@ -1,8 +1,8 @@
 # just-like-me
 
-A local behavior-evolution control plane for GitHub Copilot CLI, powered by Hindsight.
+Local tooling that makes GitHub Copilot CLI more like you, powered by Hindsight.
 
-Hindsight owns cognition (retain → recall → observations → reflect). This project owns behavioral governance (propose → eval → approve → publish → monitor → rollback).
+Hindsight owns cognition (retain → recall → observations → mental models). This project owns the last-mile engineering: local runtime management, historical ingestion, and instruction publication. Eval-gated publishing is on the roadmap (see blueprint.md), not yet implemented.
 
 ## Install
 
@@ -81,8 +81,9 @@ Update personal instructions from Hindsight Mental Model:
 just_like_me.instructions.update
 ```
 
-- If the `just_like_me` Mental Model exists with generated content, it updates `instructions.md` instantly.
-- If it does not exist yet, it registers the Mental Model in Hindsight (configured with `mode: delta` and `refresh_after_consolidation: true`) and uses the default repository instructions until background reflection completes.
+- If the `just_like_me` Mental Model exists with generated content (≥ 100 chars), it wraps the traits in the persona prompt template and publishes instantly.
+- If it does not exist yet, it registers the Mental Model in Hindsight (configured with `mode: delta`, `refresh_after_consolidation: true`, `keep_trace: true`) and falls back to the default traits until background reflection completes.
+- Writes the packaged `instructions.md` and installs it to `~/.copilot/instructions/just-like-me-instructions.md`.
 
 
 ## Recall
