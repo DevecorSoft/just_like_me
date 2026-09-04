@@ -20,7 +20,7 @@ Just Like Me 只做最后一公里的工程化：
 
 认知属于 Hindsight，治理与习惯属于你。
 
-项目地址：[DevecorSoft/just_like_me](https://github.com/DevecorSoft/just_like_me#readme)
+项目地址：[DevecorSoft/just_like_me](https://github.com/DevecorSoft/just_like_me)
 
 ---
 
