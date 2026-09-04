@@ -7,13 +7,17 @@ Hindsight owns cognition (retain → recall → observations → reflect). This 
 ## Install
 
 ```shell
-uv tool install just-like-me
+uv tool install .
 just_like_me.skills.install
 just_like_me.instructions.install
 ```
 
 - `just_like_me.skills.install`: Copies the packaged skill to `~/.agents/skills/recall-memory/SKILL.md`.
-- `just_like_me.instructions.install`: Copies personal instructions to `~/.agents/instructions.md` & `~/.copilot/copilot-instructions.md`.
+- `just_like_me.instructions.install`: Copies personal instructions to `~/.copilot/instructions/just-like-me-instructions.md`.
+
+## Local LLM
+
+Deploy a local OpenAI-compatible LLM endpoint with [mtplx](https://mtplx.com/) (the config below expects it at `http://localhost:8000/v1`).
 
 ## Start Hindsight
 
