@@ -2,7 +2,7 @@
 
 Local tooling that makes GitHub Copilot CLI more like you, powered by Hindsight.
 
-Hindsight owns cognition (retain → recall → observations → mental models). This project owns the last-mile engineering: local runtime management, historical ingestion, and instruction publication. Eval-gated publishing is on the roadmap (see blueprint.md), not yet implemented.
+Hindsight owns cognition (retain → recall → observations → mental models). This project owns the last-mile engineering: local runtime management, historical ingestion, and instruction publication. The next step is personal discernment assistance through user-confirmed Hindsight Documents, scoped recall, and a decision Skill (see blueprint.md); this workflow is not yet implemented.
 
 ## Install
 
@@ -97,4 +97,3 @@ hindsight memory recall just_like_me "<semantic query>" --fact-type world,observ
 - [Hindsight](https://github.com/vectorize-io/hindsight)
 - [Hindsight Recall API](https://hindsight.vectorize.io/developer/api/recall)
 - [Hindsight Copilot integration](https://hindsight.vectorize.io/blog/2026/07/30/github-copilot-persistent-memory)
-

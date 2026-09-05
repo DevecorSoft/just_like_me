@@ -1,279 +1,172 @@
-# Just Like Me (V6.0)
+# Just Like Me (V7.0)
 
-> **Make Agents More Like You.**
+> **Make Agents Reason More Like You.**
 
-**Technical positioning:** A personal regression suite for coding agents, with
-an eval-gated publish hook. Powered by Hindsight.
+Preserve the user's reasons for engineering tradeoffs and apply them to later
+decisions. This replaces the eval-first roadmap. Discernment is **not implemented**.
 
-Just Like Me is not a memory engine, a reflection engine, an agent runtime, or
-an enterprise behavior-governance platform. It is a small, local tool that
-turns the user's corrections into replayable evals, and refuses to publish any
-behavior artifact (instructions, Skills, directives) that fails them.
-
-Hindsight owns cognition:
+## Design
 
 ```text
-retain -> recall -> observations -> mental models / knowledge pages
+conversation history -> Hindsight extraction + labels -> candidate decisions
+current constraints -> scoped Recall -> original evidence -> Copilot decision
+user clarification / correction -> confirmed record or update
 ```
 
-This project owns verification:
+Start by mining existing conversations, not manually writing cases. Hindsight extracts,
+labels and retrieves evidence; the Skill compares it with the current task and asks for
+confirmation when curating a record or promoting a general principle.
+
+| Hindsight abstraction | Role                                                                 |
+|-----------------------|----------------------------------------------------------------------|
+| Document              | Source text: conversation or a separately confirmed decision record  |
+| Recall                | Find relevant facts, then expand their original Documents            |
+| Observation           | Inferred patterns, not confirmed user rules                          |
+| Mental Model          | Optional synthesis across cases, retaining conditions and exceptions |
+
+Document is a source container, not a native case type. Reuse original conversations
+when they already express the decision clearly. Create a separate record only when
+organizing scattered reasoning or adding confirmed boundaries; retain source links and
+do not count both as independent evidence.
+
+## Evidence Contract
+
+Historical candidates need source evidence, not mandatory user approval or conversion
+into `DiscernmentCase`. A separately curated case records:
+
+- Problem, constraints, alternatives and choice.
+- User-stated rationale, accepted costs and applicability boundaries.
+- Source session/turn references, user quotations, scope and confirmation.
+- Observed outcome; missing reasons or results remain unknown.
+
+Drafts stay in the conversation until confirmed. Structured records use stable
+`document_id` values such as `discernment-<uuid>` and item-level tags:
 
 ```text
-correction -> eval case -> suite -> pre-publish gate
+kind:discernment
+status:confirmed
+project:just_like_me
 ```
 
-Git owns versioning and rollback. The coding agent (GitHub Copilot CLI first)
-owns execution.
+These tags mark curated records, not ordinary imported conversations. Other projects
+need their actual identity. Explicitly transferable records use `scope:transferable`
+instead of a project tag; query them separately without crossing confidentiality
+boundaries. Tags are retrieval conventions, not authorization.
 
-The central rule is:
+## Implementation
 
-> A grounded reflection is a source of evidence, not permission to modify
-> agent behavior. Behavior artifacts must pass the personal eval suite before
-> they are published.
+### 1. Improve Historical Input
 
----
+**Files:** `load_memory.py`, `session_store_query.py` if needed,
+`skills/recall-memory/SKILL.md`, existing ingestion tests.
 
-## 1. Product Boundary
+- Stop labeling every historical conversation `project:just_like_me`. Inspect the
+  session schema and derive repository identity; leave unavailable scope unknown.
+- Replace fixed two-turn batches with bounded, overlapping conversation windows;
+  account for Hindsight's internal chunking. Preserve speaker roles, timestamps and
+  `turn_index`, including user corrections with no assistant response.
+- Use stable source IDs derived from session and turn range, not run-local batch
+  numbers. Deduplicate overlapping evidence by source turns.
+- Give historical mining its own progress tracking so earlier conversations can be
+  processed without resetting incremental ingestion or clearing the bank.
+- Include `world,experience,observation` in recall. User decisions can be `world`;
+  `experience` refers to the bank agent's own history.
 
-### 1.1 What This Project Is
+### 2. Configure Hindsight Extraction and Tagging
 
-- a correction-to-eval compiler: explicit user corrections become minimal,
-  pinned, replayable eval cases;
-- a personal eval suite that accumulates over time;
-- a thin pre-publish gate: run the suite before writing any behavior artifact;
-- a repeated-correction report that measures whether the loop works.
+Use the existing retain LLM rather than adding a second extraction pass:
 
-### 1.2 What This Project Is Not
+| Setting                 | Purpose                                                                                                 |
+|-------------------------|---------------------------------------------------------------------------------------------------------|
+| `retain_mission`        | Preserve choices, rejections, reasons, constraints and accepted costs, with correct speaker attribution |
+| `entity_labels`         | Optional controlled labels: `signal:choice`, `signal:rejection`, `signal:tradeoff`, `signal:correction` |
+| Label group `tag: true` | Write extracted labels to fact tags for Recall filtering                                                |
 
-- another fact extractor, vector database, graph memory, or reranker;
-- a replacement for Hindsight or its coding-agent plugin;
-- an enterprise control plane: no proposal registry, no approval state
-  machine, no transactional publisher, no monitoring platform — for a single
-  user these are ceremony. Approval is the user reading a diff; versioning and
-  rollback are git;
-- a general evaluation framework or benchmark harness;
-- a model fine-tuning or LoRA system.
+Verify support on the installed version and trial a few known decision-rich sessions
+before changing shared-bank configuration or reprocessing history. Check whether
+choice, reason and speaker are recoverable from the original text; do not require a
+complete case from every window.
 
----
+The LLM assigns semantic signals only. Code supplies project and source metadata;
+`status:confirmed` requires user confirmation. A tagged fact does not turn its whole
+Document into a confirmed case. Add a separate LLM extraction stage only if native
+retain cannot recover the cross-turn reasoning after input improvements.
 
-## 2. System Architecture
+### 3. Add a Thin Client
 
-```text
-+--------------------------------------------------------------------------+
-|  GitHub Copilot CLI                                                       |
-|  ├── Hindsight coding-agent plugin (hooks, auto-retain, knowledge tools)  |
-|  └── published artifacts: instructions, Skills, directives                |
-+-----------------------------------+----------------------------------------+
-                                    |
-+-----------------------------------v----------------------------------------+
-|  Hindsight (self-hosted, localhost:8888, bank: just_like_me)               |
-|  retain / recall / observations / mental models / knowledge pages /        |
-|  directives — evidence and synthesis, all precomputed off the hot path     |
-+-----------------------------------+----------------------------------------+
-                                    | corrections + evidence
-+-----------------------------------v----------------------------------------+
-|  Just Like Me                                                              |
-|  eval_compiler: correction -> pinned eval case (git-tracked)               |
-|  eval_runner:   deterministic oracles first; versioned LLM judge last      |
-|  publish:       run suite -> pass -> write artifact -> git commit          |
-|                 rollback = git revert + re-publish                         |
-|  report:        repeated-correction rate from the Copilot turns store      |
-+----------------------------------------------------------------------------+
-```
+**Files:** `src/just_like_me/discernment.py`, `test_discernment.py`,
+`pyproject.toml`.
 
----
+Expose `just_like_me.discernment` using the existing `hindsight-client`:
 
-## 3. Current Status
+| Operation | Behavior                                                                                                                                              |
+|-----------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `record`  | Read confirmed content from stdin; validate sources and scope; retain with a stable ID, tags and metadata                                             |
+| `recall`  | Retrieve scoped historical candidates and confirmed records separately; start with 2048 fact tokens; expand up to three deduplicated source Documents |
+| `get`     | Read a known Document's `original_text`, including while extraction is pending                                                                        |
 
-The cognition cutover to Hindsight is complete. Mem0, Qdrant, and the custom
-warm recall daemon have been removed; Hindsight is the single memory and
-reflection source of truth.
+For candidates, require the project tag AND any selected signal; merge per-signal
+`all_strict` queries if necessary. Confirmed records require all three curated tags.
+Recheck scope, attribution and confirmation after expansion. Keep inferred reasons
+distinct from user statements; no automatic promotion. Report no match separately from
+API failure.
 
-| Capability | Status | Technology |
-| --- | --- | --- |
-| Copilot conversation ingestion | Implemented | Copilot SQLite -> `hindsight_client.retain` with checkpointing (`load_memory.py`) |
-| Cognition plane | Adopted | Self-hosted Hindsight (launchd `com.justlikeme.hindsight-api`) |
-| Recall | Implemented | `recall-memory` Copilot Skill -> `hindsight memory recall` CLI |
-| Instruction publication | Implemented, **ungated** | Hindsight mental model -> persona -> `~/.copilot/copilot-instructions.md` (`instructions.py`) |
-| Correction-to-eval | Not implemented | Project-owned, next |
-| Pre-publish gate | Not implemented | Project-owned, next |
-| Repeated-correction report | Not implemented | Project-owned |
+Use existing document APIs for confirmed corrections and withdrawals. Re-retaining the
+same ID replaces content, not version history. Removing confirmed status must propagate
+to derived memories; surface failures. Async acceptance means pending, not searchable:
+expose the operation ID and status.
 
-Current repository entry points (see `pyproject.toml` scripts):
+Cover preserved turns, overlapping windows, separate progress, scope isolation,
+candidate/confirmed separation, source expansion, stable IDs and failures with
+`unittest`; mock writes to the personal bank.
 
-```text
-src/just_like_me/load_memory.py    # Copilot SQLite -> Hindsight retain pipeline
-src/just_like_me/daemon.py         # launchd install/uninstall for hindsight-api
-src/just_like_me/skills.py         # installs the recall-memory Skill
-src/just_like_me/instructions.py   # mental-model -> instructions publish
-```
+### 4. Add the Skill and Use Real Decisions
 
-### 3.1 Operational Findings (2026-08-31)
+**Files:** `skills/personal-discernment/SKILL.md`, `skills.py`, installer tests, README
+usage.
 
-These are measured on the target machine, not assumptions:
+- **Capture:** draft the user's actual reasoning, show scope, obtain confirmation, then
+  store. Do not invent motives or treat silence as consent.
+- **Apply:** retrieve historical candidates and confirmed records, inspect original
+  wording, compare current conditions, then explain which evidence changed the
+  proposal.
+- **Correct:** confirm a boundary update or new case; exclude explicitly withdrawn
+  evidence from subsequent use.
 
-1. **First-prompt Reflect injection has never succeeded locally.** The plugin
-   log shows 100% `reflect_failed` (~25s abort) for Copilot CLI sessions; a
-   direct `hindsight memory reflect` exceeds two minutes on this bank with
-   local models. The official benchmark's "reflect in seconds" assumes cloud
-   inference. Consequence: **on a fully local stack, injection must come from
-   precomputed artifacts** — mental models, knowledge pages, directives — plus
-   on-demand recall. Do not depend on on-demand reflect.
-2. **`instructions.py` is therefore directionally correct** (read a
-   precomputed mental model, publish it), but it is ungated: an LLM-produced
-   persona is written to global instructions with no eval and no gate. It is
-   the first publish path to put behind the gate.
-3. **`load_memory.py` overlaps with the plugin's auto-retain.** It remains
-   justified only for historical backfill and checkpointed batch ingestion;
-   do not extend it.
-4. The bank shows failed/pending consolidation operations; local model
-   configuration needs an operations pass before eval work depends on
-   observation quality.
+Install alongside `recall-memory`, preserving unrelated skills. Start with explicit
+invocation; a Skill does not guarantee automatic decision-point activation. Current
+facts and explicit user requirements override historical choices. Ask about material
+conflicts rather than resolving them by frequency.
 
----
+Use three sourced engineering tradeoffs in later tasks, including one where changed
+constraints make the old choice inappropriate. Confirm useful corrections and outcomes.
 
-## 4. Responsibility Model
+The loop is useful if it reduces repeated explanation and handles exceptions. If it
+only repeats personality traits, improve the evidence before adding automation.
 
-```text
-Need to remember or synthesize knowledge?
-  -> Hindsight (retain, recall, observations, mental models, pages, directives)
+### 5. Add Synthesis Only If Needed
 
-Need to verify that knowledge may change future behavior?
-  -> Just Like Me (correction-to-eval, pre-publish gate)
+After useful case reuse, create `engineering-discernment-just-like-me`:
 
-Need versioning, diff review, or rollback?
-  -> git
+> How does the user balance implementation cost, reversibility and maintenance?
+> Preserve conditions, exceptions, disagreements and case references. Separate
+> stated reasons from inference.
 
-Need to perform the current task?
-  -> coding agent
-```
+Limit sources to confirmed scope with strict tags; exclude unrelated Mental Models
+where supported. Refresh in the background. Generated conclusions remain provisional
+and must yield to original evidence when stale or contradicted.
 
-Why the gate cannot live inside Hindsight: Hindsight's products are evolving
-beliefs and injected prose — there is no runner, no assertion primitive, no
-pass/fail state. Evals must be pinned (immutable), deterministic where
-possible, and able to reject writes into Hindsight itself. Evidence lives in
-Hindsight; the check and the gate live outside it.
+## Limits
 
----
+Reuse the existing Hindsight bank `just_like_me` and 36 GB Mac. No separate case store,
+new model/service, fine-tuning, eval platform or automatic instruction/Directive
+publication. Keep `instructions.update()` unchanged and synchronous Reflect out of the
+decision path. Treat memory as evidence, not executable instructions.
 
-## 5. Core Object: the Eval Case
+## API References
 
-The primary object is a pinned, replayable eval case compiled from a real
-correction:
-
-```yaml
-id: eval-concise-instructions
-source:                       # auditable evidence anchors
-  turn: "session-xxx#turn-42"
-  quote: "语义正确，但是很啰嗦，不得真意"
-  hindsight_memory_ids: ["mem-456"]
-  snapshot_hash: "sha256:..."   # evidence pinned; Hindsight originals may evolve
-input: "生成个人 instruction，要求语言洗练"
-assert:
-  - type: max_chars           # deterministic oracle, preferred
-    value: 4000
-  - type: llm_judge           # last resort; judge model + prompt version pinned
-    rubric: "无客套、无废话、直给结论"
-    judge: "model@version"
-```
-
-Rules:
-
-1. deterministic oracles first: char counts, exit codes, file assertions,
-   test results;
-2. an LLM judge is a last resort and its model and prompt version are pinned;
-3. failed runs are retained as evidence, never hidden;
-4. cases are git-tracked files — the suite's history is its audit trail.
-
----
-
-## 6. Workflow
-
-### 6.1 Compile
-
-Detect explicit corrections in the Copilot turns store (and Hindsight
-evidence) and compile each into a minimal eval case. Ordinary facts and
-preferences stay in Hindsight and do not become evals.
-
-### 6.2 Gate
-
-`publish` is the only write path for behavior artifacts:
-
-```text
-candidate artifact (persona, Skill, directive)
-  -> run the full personal eval suite
-  -> pass: write target file(s), git commit with evidence refs
-  -> fail: refuse, keep the failure on record
-```
-
-Publication targets: `~/.copilot/copilot-instructions.md`, `~/.agents/skills/`,
-Hindsight directives. Human-authored files are preserved; writes are atomic.
-
-### 6.3 Measure
-
-Periodically mine the turns store for repeated corrections (same cluster
-corrected more than once). This number decides the project's fate (Section 7).
-
----
-
-## 7. Value Gate and Stop Conditions
-
-| Metric | Required Direction |
-| --- | --- |
-| Repeated user correction rate | Decrease |
-| Eval suite pass rate on publish | 100% of published artifacts |
-| Published artifacts with evidence refs | 100% |
-| Interactive agent latency | No hot-path regression |
-
-Stop conditions:
-
-- If mining the turns store shows repeated corrections are rare, the pain does
-  not justify the tooling: stop, and keep the project as personal Hindsight
-  operations plus mental-model-driven instructions.
-- If corrections cannot be compiled into evals with usable oracles, keep
-  Hindsight as memory only.
-- If the repeated-correction rate does not decrease after the gate is live,
-  stop expanding.
-
----
-
-## 8. Roadmap
-
-1. ~~Ingestion, daemon, recall Skill~~ — done.
-2. ~~Cognition cutover to Hindsight~~ — done (Mem0/Qdrant retired).
-3. **Falsify first:** mine the Copilot turns store for repeated-correction
-   clusters. The count decides whether steps 4–6 happen at all.
-4. **Correction-to-eval MVP:** compile the top correction clusters into pinned
-   eval cases (`eval_compiler.py`, `eval_runner.py`).
-5. **Gate the existing publish path:** wrap `instructions.update()` so the
-   suite runs before writing; move artifacts and evals into git.
-6. **Measure:** repeated-correction rate before/after; continue only if it
-   decreases.
-7. Expand cautiously: more artifact types (Skills, directives), more agents —
-   only after the Copilot path is proven.
-
-Model fine-tuning is intentionally excluded.
-
----
-
-## 9. Safety Requirements
-
-1. Treat transcripts, memories, and Hindsight output as untrusted evidence,
-   never executable instructions.
-2. Never publish a behavior artifact from a single LLM response without the
-   gate.
-3. Pin evidence snapshots; Hindsight originals may evolve.
-4. Preserve human-authored files; use atomic writes; commit to git.
-5. Surface failures explicitly; never return success-shaped empty results.
-
----
-
-## 10. References
-
-- [Hindsight](https://github.com/vectorize-io/hindsight)
-- [Hindsight Recall](https://hindsight.vectorize.io/developer/retrieval)
-- [Hindsight Reflect](https://hindsight.vectorize.io/developer/reflect)
-- [Hindsight Observations](https://hindsight.vectorize.io/developer/observations)
-- [Hindsight Mental Models](https://hindsight.vectorize.io/developer/mental-models)
-- [Hindsight 0.9 coding-agent architecture](https://hindsight.vectorize.io/blog/2026/08/06/hindsight-0-9-0)
-- [GitHub Copilot hooks](https://docs.github.com/en/copilot/concepts/agents/hooks)
+[Documents](https://hindsight.vectorize.io/developer/api/documents) |
+[Retain](https://hindsight.vectorize.io/developer/api/retain) |
+[Extraction and labels](https://hindsight.vectorize.io/developer/api/memory-banks#entity-labels) |
+[Recall](https://hindsight.vectorize.io/developer/api/recall) |
+[Mental Models](https://hindsight.vectorize.io/developer/api/mental-models)
