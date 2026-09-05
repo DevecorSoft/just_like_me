@@ -13,6 +13,7 @@ dependencies = [
 
 [project.scripts]
 "just_like_me.load_memory" = "just_like_me.load_memory:main"
+"just_like_me.install" = "just_like_me.install:main"
 "just_like_me.daemon.install" = "just_like_me.daemon:install"
 "just_like_me.daemon.uninstall" = "just_like_me.daemon:uninstall"
 "just_like_me.skills.install" = "just_like_me.skills:install"

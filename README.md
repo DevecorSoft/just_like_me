@@ -2,7 +2,11 @@
 
 Local tooling that makes GitHub Copilot CLI more like you, powered by Hindsight.
 
-Hindsight owns cognition (retain → recall → observations → mental models). This project owns the last-mile engineering: local runtime management, historical ingestion, and instruction publication. The next step is personal discernment assistance through user-confirmed Hindsight Documents, scoped recall, and a decision Skill (see blueprint.md); this workflow is not yet implemented.
+Hindsight owns cognition (retain → recall → observations → mental models). This project
+owns the last-mile engineering: local runtime management, historical ingestion, and
+instruction publication. The next step is personal discernment assistance through
+user-confirmed Hindsight Documents, scoped recall, and a decision Skill (see
+blueprint.md); this workflow is not yet implemented.
 
 ## Install
 
@@ -12,12 +16,15 @@ just_like_me.skills.install
 just_like_me.instructions.install
 ```
 
-- `just_like_me.skills.install`: Copies the packaged skill to `~/.agents/skills/recall-memory/SKILL.md`.
-- `just_like_me.instructions.install`: Copies personal instructions to `~/.copilot/instructions/just-like-me-instructions.md`.
+- `just_like_me.skills.install`: Copies the packaged skill to
+  `~/.agents/skills/recall-memory/SKILL.md`.
+- `just_like_me.instructions.install`: Copies personal instructions to
+  `~/.copilot/instructions/just-like-me-instructions.md`.
 
 ## Local LLM
 
-Deploy a local OpenAI-compatible LLM endpoint with [mtplx](https://mtplx.com/) (the config below expects it at `http://localhost:8000/v1`).
+Deploy a local OpenAI-compatible LLM endpoint with [mtplx](https://mtplx.com/) (the
+config below expects it at `http://localhost:8000/v1`).
 
 ## Start Hindsight
 
@@ -66,6 +73,14 @@ npx @vectorize-io/hindsight-coding-agents install copilot-cli --server self-host
 
 ## Ingestion & Instructions Update
 
+Configure Hindsight to reconstruct your discernment with office-friendly defaults for a
+36 GB Mac, replacing the configured bank fields and overwriting
+`~/.hindsight/coding-agent.json`:
+
+```shell
+just_like_me.install
+```
+
 Ingest Copilot conversation history into the `just_like_me` memory bank:
 
 ```shell
@@ -73,7 +88,8 @@ just_like_me.load_memory
 just_like_me.load_memory --max-turns-per-chunk 10
 ```
 
-Reads from the read-only Copilot SQLite session store, checkpoints progress, and retains conversations via the Hindsight client at `http://localhost:8888`.
+Reads from the read-only Copilot SQLite session store, checkpoints progress, and
+retains conversations via the Hindsight client at `http://localhost:8888`.
 
 Update personal instructions from Hindsight Mental Model:
 
@@ -81,10 +97,10 @@ Update personal instructions from Hindsight Mental Model:
 just_like_me.instructions.update
 ```
 
-- If the `just_like_me` Mental Model exists with generated content (≥ 100 chars), it wraps the traits in the persona prompt template and publishes instantly.
-- If it does not exist yet, it registers the Mental Model in Hindsight (configured with `mode: delta`, `refresh_after_consolidation: true`, `keep_trace: true`) and falls back to the default traits until background reflection completes.
-- Writes the packaged `instructions.md` and installs it to `~/.copilot/instructions/just-like-me-instructions.md`.
-
+Publishes conditional decision patterns from the `just_like_me_discernment` Mental
+Model to `~/.copilot/instructions/just-like-me-instructions.md`, creating the model
+with automatic refresh if absent and using evidence-first defaults until content is
+available.
 
 ## Recall
 
