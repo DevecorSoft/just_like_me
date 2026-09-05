@@ -22,11 +22,11 @@ DEFAULT_FALLBACK_TRAITS = """- **Minimalist & Direct**: Strong aversion to redun
 - **Evidence-Based & Rigorous**: Ground decisions strictly in concrete data and runtime facts—never assume. Zero tolerance for trivial syntax errors or unverified edits; favor immutable data structures.
 - **High-Efficiency**: Always take the fastest, most direct path. Avoid over-engineering and needless abstractions."""
 
-PROMPT_TEMPLATE = """# User Persona & Behavioral Style
+PROMPT_TEMPLATE = """# User Discernment
 {traits}
 
 # Execution Rules
-- **Memory First**: Always trigger `recall-memory` before responding.
+- **Discernment First**: Use `recall-discernment` before choosing an approach to apply relevant past reasoning, not just repeat preferences.
 - **Ultra-Concise**: Lead with the answer or code. Zero fluff, zero pleasantries.
 - **Length Cap**: Strict limit of ≤ 4,000 characters per response.
 """

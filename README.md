@@ -16,8 +16,8 @@ just_like_me.skills.install
 just_like_me.instructions.install
 ```
 
-- `just_like_me.skills.install`: Copies the packaged skill to
-  `~/.agents/skills/recall-memory/SKILL.md`.
+- `just_like_me.skills.install`: Installs `recall-discernment` to
+  `~/.agents/skills/recall-discernment/SKILL.md` to recall decisions, reasons and applicability limits.
 - `just_like_me.instructions.install`: Copies personal instructions to
   `~/.copilot/instructions/just-like-me-instructions.md`.
 

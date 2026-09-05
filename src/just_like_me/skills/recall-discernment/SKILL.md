@@ -1,9 +1,9 @@
 ---
-name: recall-memory
-description: Recall the user's sourced decisions, reasons and tradeoffs to apply their discernment to the current task. Use always.
+name: recall-discernment
+description: Recall evidence-backed choices, tradeoffs and applicability limits to apply the user's discernment to the current task. Use always.
 ---
 
-# Apply the user's discernment
+# Recall and apply the user's discernment
 
 Recall once per task before choosing an approach: learn when and why the user chose
 something, not just what they prefer.

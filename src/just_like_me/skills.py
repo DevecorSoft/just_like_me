@@ -3,7 +3,7 @@ from importlib.resources import files
 from pathlib import Path
 import shutil
 
-SKILL_NAME = "recall-memory"
+SKILL_NAME = "recall-discernment"
 SKILL_TARGET_PATH = Path.home() / ".agents" / "skills" / SKILL_NAME / "SKILL.md"
 
 

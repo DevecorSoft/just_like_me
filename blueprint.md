@@ -58,7 +58,7 @@ boundaries. Tags are retrieval conventions, not authorization.
 ### 1. Improve Historical Input
 
 **Files:** `load_memory.py`, `session_store_query.py` if needed,
-`skills/recall-memory/SKILL.md`, existing ingestion tests.
+`skills/recall-discernment/SKILL.md`, existing ingestion tests.
 
 - Stop labeling every historical conversation `project:just_like_me`. Inspect the
   session schema and derive repository identity; leave unavailable scope unknown.
@@ -133,7 +133,7 @@ usage.
 - **Correct:** confirm a boundary update or new case; exclude explicitly withdrawn
   evidence from subsequent use.
 
-Install alongside `recall-memory`, preserving unrelated skills. Start with explicit
+Install alongside `recall-discernment`, preserving unrelated skills. Start with explicit
 invocation; a Skill does not guarantee automatic decision-point activation. Current
 facts and explicit user requirements override historical choices. Ask about material
 conflicts rather than resolving them by frequency.

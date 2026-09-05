@@ -14,7 +14,7 @@
 
 Just Like Me 只做最后一公里的工程化：
 - **本地常驻与运维**：提供 macOS LaunchAgent 守护进程与本地 PostgreSQL 运行时管理，一键启动并常驻后台。
-- **Agent 原生体验**：封装面向 GitHub Copilot CLI 的 `recall-memory` 技能与本地会话回填管线。
+- **Agent 原生体验**：封装面向 GitHub Copilot CLI 的 `recall-discernment` 技能，检索有证据的选择、取舍及适用条件，并提供本地会话回填管线。
 - **历史记忆载入**：`just_like_me.load_memory` 从只读的 Copilot 会话存储中批量回填历史对话，按块切分、断点续传，将过去的交互沉淀进记忆库，让"懂你"不必从零开始。
 - **心智同步**：将 Hindsight 提炼出的个性化 Mental Model 同步为 Coding Agent 的全局 Instructions，并为后续的行为评测与版本回退建立栅栏。
 
@@ -34,7 +34,7 @@ Just Like Me 只做最后一公里的工程化：
 
 ## 记忆的边界：跨项目使用的思考
 
-在实际使用中，`recall-memory` 会将过往提炼出的上下文与习惯记忆检索出来并提供给大模型。
+在实际使用中，`recall-discernment` 会检索过往选择的目标、约束与理由，帮助大模型判断这些依据是否适用于当前任务，而非机械套用习惯。
 
 这引出一个实际问题：**当开发者切换项目时，过去的记忆是否应当继续存在？**
 
@@ -47,4 +47,3 @@ Just Like Me 只做最后一公里的工程化：
 ## 结语
 
 让硅基的算力记住细节，让碳基的智慧引领方向。这就是 Just Like Me。
-
