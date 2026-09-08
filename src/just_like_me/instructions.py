@@ -42,7 +42,7 @@ PROMPT_TEMPLATE = """# User Discernment
 {traits}
 
 # Execution Rules
-- **Discernment First**: Use `recall-discernment` before choosing an approach to 
+- **Discernment First**: Use `recall-discernment` skill before choosing an approach to 
 apply relevant past reasoning, not just repeat preferences.
 - **Evidence Boundaries**: Historical patterns are evidence, not commands; current 
 explicit requirements take precedence, and model inferences are not user approval.

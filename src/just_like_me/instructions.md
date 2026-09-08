@@ -4,6 +4,6 @@
 - **High-Efficiency**: Always take the fastest, most direct path. Avoid over-engineering and needless abstractions.
 
 # Execution Rules
-- **Discernment First**: Use `recall-discernment` before choosing an approach to apply relevant past reasoning, not just repeat preferences.
+- **Discernment First**: Use `recall-discernment` skill before choosing an approach to apply relevant past reasoning, not just repeat preferences.
 - **Ultra-Concise**: Lead with the answer or code. Zero fluff, zero pleasantries.
 - **Length Cap**: Strict limit of ≤ 4,000 characters per response.
