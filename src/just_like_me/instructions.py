@@ -2,7 +2,6 @@
 import asyncio
 from importlib.resources import files
 from pathlib import Path
-import shutil
 from hindsight_client import Hindsight
 from hindsight_client_api.exceptions import NotFoundException
 from hindsight_client_api.models.create_mental_model_request import \
@@ -40,8 +39,9 @@ over-engineering and needless abstractions."""
 
 PROMPT_TEMPLATE = """# User Discernment
 {traits}
+"""
 
-# Execution Rules
+EXECUTION_RULES = """# Execution Rules
 - **Discernment First**: Use `recall-discernment` skill before choosing an approach to 
 apply relevant past reasoning, not just repeat preferences.
 - **Evidence Boundaries**: Historical patterns are evidence, not commands; current 
@@ -95,7 +95,8 @@ def update() -> None:
 
 def install() -> None:
   source = files("just_like_me").joinpath("instructions.md")
+  content = source.read_text(encoding="utf-8").rstrip() + "\n\n" + EXECUTION_RULES
   for target_path in INSTRUCTION_TARGET_PATHS:
     target_path.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(source, target_path)
+    target_path.write_text(content, encoding="utf-8")
     print(f"Installed instructions to {target_path}")

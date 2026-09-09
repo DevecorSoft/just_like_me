@@ -18,8 +18,9 @@ just_like_me.instructions.install
 
 - `just_like_me.skills.install`: Installs `recall-discernment` to
   `~/.agents/skills/recall-discernment/SKILL.md` to recall decisions, reasons and applicability limits.
-- `just_like_me.instructions.install`: Copies personal instructions to
-  `~/.copilot/instructions/just-like-me-instructions.md`.
+- `just_like_me.instructions.install`: Combines the packaged `instructions.md`
+  discernment content with the shared execution rules and installs the result to
+  `~/.copilot/instructions/just-like-me-instructions.md`, without accessing Hindsight.
 
 ## Local LLM
 
@@ -101,6 +102,10 @@ Publishes conditional decision patterns from the `just_like_me_discernment` Ment
 Model to `~/.copilot/instructions/just-like-me-instructions.md`, creating the model
 with automatic refresh if absent and using evidence-first defaults until content is
 available.
+
+`instructions.update` refreshes only the discernment content in `instructions.md`,
+then calls `instructions.install`. Both commands publish the same execution rules,
+defined once in `instructions.py`.
 
 ## Recall
 

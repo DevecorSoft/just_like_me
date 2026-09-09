@@ -19,7 +19,7 @@
         <key>HINDSIGHT_API_LLM_API_KEY</key>
         <string>""</string>
         <key>HINDSIGHT_API_LLM_MODEL</key>
-        <string>mtplx-qwen35-9b-optimized-speed</string>
+        <string>mtplx-qwen38-27b-optimized-speed</string>
         <key>HINDSIGHT_API_LLM_TIMEOUT</key>
         <string>1200</string>
         <key>HINDSIGHT_API_REFLECT_WALL_TIMEOUT</key>
