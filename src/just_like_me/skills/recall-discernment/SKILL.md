@@ -11,7 +11,9 @@ something, not just what they prefer.
 ## Usage
 
 ```shell
-hindsight memory recall just_like_me "<current goal, constraints and alternatives>" --fact-type world,observation --max-tokens 2048 --prefer-observations --output yaml
+hindsight memory recall just_like_me "<current goal, constraints and alternatives>" \
+  --fact-type world,observation --max-tokens 2048 --prefer-observations \
+  --output json | jq '{results: [.results[]? | {text, type}]}'
 ```
 
 ## Guidance

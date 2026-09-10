@@ -2,7 +2,7 @@
 
 如果有一个人懂得你喜恶，陪伴你长久，理解你坚守，分担你忧愁，知道你习惯，跟随你做事，那么这个人何必是家人、朋友、同事，也可以是 “Just Like Me”。
 
-这是一个以人为本的项目。每个人头上的碳基神经网络，拥有远超任何硅基神经网络的判断力。让工具去适应人、沉淀人的习惯，才能把这种判断力真正发挥出来。
+这是一个以人为本的项目。每个人在工作中积累的经验与取舍，不该在每次打开 Agent 时重新解释。让工具去适应人、沉淀人的习惯，才能把人的判断力真正发挥出来。
 
 ---
 
@@ -13,14 +13,26 @@
 我们没有重复造轮子去发明另一套向量检索或记忆图谱。认知与记忆的全部能力——记忆存储 `retain`、多策略检索 `recall`、经验沉淀 `observations` 与心智模型 `mental models`——都来自底层的 **Hindsight**。
 
 Just Like Me 只做最后一公里的工程化：
-- **本地常驻与运维**：提供 macOS LaunchAgent 守护进程与本地 PostgreSQL 运行时管理，一键启动并常驻后台。
+- **本地常驻与运维**：提供 Hindsight 服务的 macOS LaunchAgent 安装脚本，使其常驻后台。
 - **Agent 原生体验**：封装面向 GitHub Copilot CLI 的 `recall-discernment` 技能，检索有证据的选择、取舍及适用条件，并提供本地会话回填管线。
 - **历史记忆载入**：`just_like_me.load_memory` 从只读的 Copilot 会话存储中批量回填历史对话，按块切分、断点续传，将过去的交互沉淀进记忆库，让"懂你"不必从零开始。
-- **心智同步**：将 Hindsight 提炼出的个性化 Mental Model 同步为 Coding Agent 的全局 Instructions，并为后续的行为评测与版本回退建立栅栏。
+- **心智同步**：通过 `just_like_me.instructions.update` 命令，将 Hindsight 提炼出的个性化 Discernment Mental Model 内容发布为 Coding Agent 的全局 Instructions，而非实时同步。
 
 认知属于 Hindsight，治理与习惯属于你。
 
 项目地址：[DevecorSoft/just_like_me](https://github.com/DevecorSoft/just_like_me)
+
+---
+
+## Discernment：记住你如何取舍
+
+“懂你”不只是知道你喜欢简洁、重视效率。更重要的是，理解你在什么情况下愿意多花一点时间，为什么拒绝一个看起来不错的方案，又为什么在另一次选择中改变了主意。**我们希望保留下来的，是这些选择背后的判断依据。这也是这里所说的 Discernment。**
+
+为此，Just Like Me 借助 Hindsight 构建 `just_like_me_discernment` 心智模型。它不是一张性格标签清单，而是尝试把分散在日常对话中的取舍整理起来：当时的目标与约束、考虑过的方案、选择的理由、接受的代价，以及让这个选择不再适用的条件。
+
+这不只是一段用于生成摘要的提示词：在记忆提取时，我们要求保留选择、拒绝和纠正；在经验聚合时，要求保留共同依据，也保留例外；心智模型再将这些有来源的判断整理成便于参考的内容。通过前面的“心智同步”，这些内容可以进入 Agent 的全局 Instructions；遇到具体任务时，再由 `recall-discernment` 检索相关证据、比较当前条件。
+
+模型推断不等于你的确认，一次选择也不代表永久的原则。**这个心智模型不是替你定型，而是让过去认真解释过的理由，在下一次合作中仍有机会被理解。**
 
 ---
 
