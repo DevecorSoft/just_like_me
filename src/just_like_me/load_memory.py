@@ -22,7 +22,7 @@ def context_aware_conversation_generator(turns, max_turns_per_chunk=10):
   for session_id, _group in groupby(valid_turns, lambda r: r["session_id"]):
     group = list(
       map(
-        lambda i: [{"role": "user", "content": i["user_message"]},
+        lambda i: [{"role": "user", "content": i["user_message"], "timestamp": i["timestamp"]},
                    {"role": "assistant", "content": i["assistant_response"]}],
         _group)
     )
@@ -37,13 +37,13 @@ def run_memory_pipeline(max_turns_per_chunk):
   conn = connect()
   cursor = conn.cursor()
   cursor.execute("""
-                 SELECT session_id, turn_index, user_message, assistant_response
+                 SELECT session_id, timestamp, user_message, assistant_response
                  FROM turns
                  WHERE timestamp > ?
                  ORDER BY timestamp ASC
                  """, (last_timestamp,))
   rows = map(
-    lambda i: dict(session_id=i[0], user_message=i[2], assistant_response=i[3]),
+    lambda i: dict(session_id=i[0], timestamp=i[1], user_message=i[2], assistant_response=i[3]),
     cursor.fetchall())
   conn.close()
 
@@ -54,7 +54,7 @@ def run_memory_pipeline(max_turns_per_chunk):
 
   base_url = "http://localhost:8888"
   logger.info("Initializing Hindsight client: %s", base_url)
-  memory_client = Hindsight(base_url=base_url, timeout=1200)
+  memory_client = Hindsight(base_url=base_url, timeout=1800)
   bank_id = "just_like_me"
   pipeline_started_at = time.perf_counter()
   processed_batches = 0
@@ -76,7 +76,7 @@ def run_memory_pipeline(max_turns_per_chunk):
         bank_id=bank_id,
         content=raw_messages,
         context=f"coding agent conversation, session {session_id}",
-        document_id=f"{session_id}#chunk-{batch_index}",
+        document_id=f"session-{session_id}",
         metadata={
           "source": "cron_memory_pipeline",
           "session_id": session_id

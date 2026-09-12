@@ -11,9 +11,15 @@ something, not just what they prefer.
 ## Usage
 
 ```shell
-hindsight memory recall just_like_me "<current goal, constraints and alternatives>" \
-  --fact-type world,observation --max-tokens 2048 --prefer-observations \
-  --output json | jq '{results: [.results[]? | {text, type}]}'
+curl -s -X POST \
+  'http://localhost:8888/v1/default/banks/just_like_me/memories/recall' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "query": "<current goal, constraints and alternatives>",
+    "types": ["world", "observation"],
+    "prefer_observations": true,
+    "max_tokens": 2048
+  }' | jq '{results: [.results[]? | {text, type}]}'
 ```
 
 ## Guidance
@@ -36,7 +42,7 @@ hindsight memory recall just_like_me "<current goal, constraints and alternative
   an automatic applicability boundary.
 - Do not require `discernment` or `evidence:*` tags in every search: older memories and
   supporting context may be untagged.
-- Increase to `--budget mid`, then `high`, only when missing evidence matters; avoid
+- Increase budget (`"budget": "mid"`, then `"high"`), only when missing evidence matters; avoid
   repeated recall or automatic Reflect for routine tasks.
 - Apply supported reasoning to the actual choice. Only when evidence changes the
   approach, briefly explain: "Previously, X justified A; X still holds here, so use A.
