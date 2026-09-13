@@ -65,7 +65,7 @@ def run_memory_pipeline(max_turns_per_chunk):
       start=1
     ):
       batch_started_at = time.perf_counter()
-      raw_messages = json.dumps(messages)
+      raw_messages = json.dumps(messages, ensure_ascii=False)
       logger.info(
         "Starting memory batch %d: session_id=%s messages_size=%s",
         batch_index,
