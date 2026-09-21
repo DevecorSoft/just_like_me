@@ -12,7 +12,7 @@ something, not just what they prefer.
 
 ```shell
 curl -s -X POST \
-  'http://localhost:8888/v1/default/banks/just_like_me/memories/recall' \
+  '{base_url}/v1/default/banks/just_like_me/memories/recall' \
   -H 'Content-Type: application/json' \
   -d '{
     "query": "<current goal, constraints and alternatives>",

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import argparse
 import asyncio
 from importlib.resources import files
 from pathlib import Path
@@ -14,7 +15,6 @@ INSTRUCTION_TARGET_PATHS = [
 ]
 
 BANK_ID = "just_like_me"
-BASE_URL = "http://localhost:8888"
 MENTAL_MODEL_NAME = "just_like_me_discernment"
 SOURCE_QUERY = """Reconstruct the user's discernment from sourced decisions and
 subtle traces, not personality labels.
@@ -90,7 +90,13 @@ async def _get_or_create_persona_mental_model(client: Hindsight) -> str:
 
 
 def update() -> None:
-  client = Hindsight(base_url=BASE_URL)
+  parser = argparse.ArgumentParser(
+    description="Update instructions from Hindsight mental model"
+  )
+  parser.add_argument("--base-url", required=True, help="Hindsight base URL")
+  args = parser.parse_args()
+
+  client = Hindsight(base_url=args.base_url)
   try:
     traits = asyncio.run(_get_or_create_persona_mental_model(client))
   finally:
@@ -110,3 +116,7 @@ def install() -> None:
     target_path.parent.mkdir(parents=True, exist_ok=True)
     target_path.write_text(content, encoding="utf-8")
     print(f"Installed instructions to {target_path}")
+
+
+if __name__ == "__main__":
+  update()

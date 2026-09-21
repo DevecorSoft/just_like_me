@@ -12,12 +12,13 @@ blueprint.md); this workflow is not yet implemented.
 
 ```shell
 uv tool install .
-just_like_me.skills.install
+just_like_me.skills.install --base-url http://localhost:8888
 just_like_me.instructions.install
 ```
 
-- `just_like_me.skills.install`: Installs `recall-discernment` to
-  `~/.agents/skills/recall-discernment/SKILL.md` to recall decisions, reasons and applicability limits.
+- `just_like_me.skills.install --base-url <url>`: Installs `recall-discernment` to
+  `~/.agents/skills/recall-discernment/SKILL.md` configured with the specified
+  Hindsight API URL, to recall decisions, reasons and applicability limits.
 - `just_like_me.instructions.install`: Combines the packaged `instructions.md`
   discernment content with the shared execution rules and installs the result to
   `~/.copilot/instructions/just-like-me-instructions.md`, without accessing Hindsight.
@@ -95,13 +96,14 @@ retains conversations via the Hindsight client at `http://localhost:8888`.
 Update personal instructions from Hindsight Mental Model:
 
 ```shell
-just_like_me.instructions.update
+just_like_me.instructions.update --base-url http://localhost:8888
 ```
 
 Publishes conditional decision patterns from the `just_like_me_discernment` Mental
-Model to `~/.copilot/instructions/just-like-me-instructions.md`, creating the model
-with automatic refresh if absent and using evidence-first defaults until content is
-available.
+Model to `~/.copilot/instructions/just-like-me-instructions.md` via the provided
+Hindsight
+base URL, creating the model with automatic refresh if absent and using evidence-first
+defaults until content is available.
 
 `instructions.update` refreshes only the discernment content in `instructions.md`,
 then calls `instructions.install`. Both commands publish the same execution rules,
