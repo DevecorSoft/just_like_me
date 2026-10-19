@@ -1,0 +1,42 @@
+services:
+  hindsight-postgres:
+    image: pgvector/pgvector:pg16
+    container_name: hindsight-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: hindsight
+    ports:
+      - "15432:5432"
+    volumes:
+      - hindsight_pgdata_test:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d hindsight"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  hindsight:
+    image: ghcr.io/vectorize-io/hindsight:1.0
+    container_name: hindsight
+    restart: unless-stopped
+    depends_on:
+      hindsight-postgres:
+        condition: service_healthy
+    ports:
+      - "8888:8888"
+    environment:
+      HINDSIGHT_API_HOST: "0.0.0.0"
+      HINDSIGHT_API_PORT: "8888"
+      HINDSIGHT_DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@hindsight-postgres:5432/hindsight"
+      HINDSIGHT_SERVER_MODE: "self-hosted"
+      HINDSIGHT_EMBEDDING_PROVIDER: "local"
+      HINDSIGHT_RERANKER_PROVIDER: "local"
+      HF_HUB_OFFLINE: "${HF_HUB_OFFLINE:-1}"
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+
+volumes:
+  hindsight_pgdata_test:
+  hf_cache:
