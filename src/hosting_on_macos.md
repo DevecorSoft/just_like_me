@@ -11,10 +11,12 @@ docker run -d \
   -v hindsight_pgdata:/var/lib/postgresql/data \
   pgvector/pgvector:pg16
 
-uv tool install hindsight-api
+python3 -m pip install hindsight-api
 
 export HINDSIGHT_API_LLM_PROVIDER=none
 export HINDSIGHT_API_DATABASE_URL=postgresql://postgres:mysecretpassword@localhost:15432/hindsight
 export HF_HUB_OFFLINE=1
 hindsight-api
+
+npx @vectorize-io/hindsight-control-plane --api-url http://localhost:8888
 ```
