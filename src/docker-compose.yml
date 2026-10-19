@@ -18,7 +18,7 @@ services:
       retries: 5
 
   hindsight:
-    image: ghcr.io/vectorize-io/hindsight:1.0
+    image: ghcr.io/vectorize-io/hindsight:0.10
     container_name: hindsight
     restart: unless-stopped
     depends_on:
@@ -26,13 +26,14 @@ services:
         condition: service_healthy
     ports:
       - "8888:8888"
+      - "9999:9999"
     environment:
       HINDSIGHT_API_HOST: "0.0.0.0"
       HINDSIGHT_API_PORT: "8888"
-      HINDSIGHT_DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@hindsight-postgres:5432/hindsight"
-      HINDSIGHT_SERVER_MODE: "self-hosted"
-      HINDSIGHT_EMBEDDING_PROVIDER: "local"
-      HINDSIGHT_RERANKER_PROVIDER: "local"
+      HINDSIGHT_API_DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@hindsight-postgres:5432/hindsight"
+      HINDSIGHT_API_LLM_PROVIDER: "none"
+      HINDSIGHT_API_EMBEDDINGS_PROVIDER: "local"
+      HINDSIGHT_API_RERANKER_PROVIDER: "local"
       HF_HUB_OFFLINE: "${HF_HUB_OFFLINE:-1}"
     volumes:
       - hf_cache:/root/.cache/huggingface
